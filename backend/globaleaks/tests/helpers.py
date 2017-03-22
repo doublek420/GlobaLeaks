@@ -663,7 +663,7 @@ class TestHandler(TestGLWithPopulatedDB):
         GLSessions.clear()
 
         # we need to reset GLApiCache to keep each test independent
-        GLApiCache.invalidate()
+        GLApiCache.invalidate_all()
 
     def request(self, jbody=None, user_id=None, role=None, headers=None, body='',
                 remote_ip='0.0.0.0', method='MOCK', handler_cls=None, attached_file={}, kwargs={}):

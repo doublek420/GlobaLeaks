@@ -327,8 +327,12 @@ class FieldTemplatesCollection(BaseHandler):
         :return: the list of field templates registered on the node.
         :rtype: list
         """
-        response = yield GLApiCache.get('fieldtemplates', self.request.language,
-                                        get_fieldtemplate_list, self.request.language, self.request.request_type)
+        response = yield GLApiCache.get('fieldtemplates',
+                                        self.request.current_tenant_id,
+                                        self.request.language,
+                                        get_fieldtemplate_list,
+                                        self.request.language,
+                                        self.request.request_type)
 
         self.write(response)
 
@@ -388,7 +392,7 @@ class FieldTemplateInstance(BaseHandler):
                                       self.request.language,
                                       self.request.request_type)
 
-        GLApiCache.invalidate()
+        GLApiCache.invalidate(self.request.current_tenant_id)
 
         self.set_status(202) # Updated
         self.write(response)
@@ -405,7 +409,7 @@ class FieldTemplateInstance(BaseHandler):
         """
         yield delete_field(field_id)
 
-        GLApiCache.invalidate()
+        GLApiCache.invalidate(self.request.current_tenant_id)
 
 
 class FieldCollection(BaseHandler):
@@ -432,7 +436,7 @@ class FieldCollection(BaseHandler):
                                       self.request.language,
                                       self.request.request_type)
 
-        GLApiCache.invalidate()
+        GLApiCache.invalidate(self.request.current_tenant_id)
 
         self.set_status(201)
         self.write(response)
@@ -461,7 +465,7 @@ class FieldInstance(BaseHandler):
                                    self.request.language,
                                    self.request.request_type)
 
-        GLApiCache.invalidate()
+        GLApiCache.invalidate(self.request.current_tenant_id)
 
         self.write(response)
 
@@ -486,7 +490,7 @@ class FieldInstance(BaseHandler):
                                       self.request.language,
                                       self.request.request_type)
 
-        GLApiCache.invalidate()
+        GLApiCache.invalidate(self.request.current_tenant_id)
 
         self.set_status(202) # Updated
         self.write(response)
@@ -504,4 +508,4 @@ class FieldInstance(BaseHandler):
         """
         yield delete_field(field_id)
 
-        GLApiCache.invalidate()
+        GLApiCache.invalidate(self.request.current_tenant_id)

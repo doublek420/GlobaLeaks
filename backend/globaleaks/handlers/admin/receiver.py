@@ -154,7 +154,7 @@ class ReceiverInstance(BaseHandler):
         request = self.validate_message(self.request.body, requests.AdminReceiverDesc)
 
         response = yield update_receiver(receiver_id, request, self.request.language)
-        GLApiCache.invalidate()
+        GLApiCache.invalidate(self.request.current_tenant_id)
 
         self.set_status(201)
         self.write(response)

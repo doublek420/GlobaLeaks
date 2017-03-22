@@ -186,7 +186,8 @@ def db_refresh_memory_variables(store):
 
     tenants = store.find(tenant.Tenant) # TODO(tid_me) Must be removed
     GLSettings.memory_copy.tenant_map = {t.label: t.id for t in tenants}
-    GLSettings.memory_copy.first_tenant_id = GLSettings.memory_copy.tenant_map['localhost:8082']
+    # TODO(tid_me) change .get() to hard lookup
+    GLSettings.memory_copy.first_tenant_id = GLSettings.memory_copy.tenant_map.get('localhost:8082', None)
 
     db_refresh_exception_delivery_list(store)
 

@@ -160,7 +160,7 @@ class ReceiverInstance(BaseHandler):
                                                          request,
                                                          self.request.language)
 
-        GLApiCache.invalidate()
+        GLApiCache.invalidate(self.request.current_tenant_id)
 
         self.write(receiver_status)
 

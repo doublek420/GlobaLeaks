@@ -72,7 +72,7 @@ class FileInstance(BaseHandler):
         finally:
             uploaded_file['body'].close()
 
-        GLApiCache.invalidate()
+        GLApiCache.invalidate(self.request.current_tenant_id)
 
         self.set_status(201)
 
@@ -82,4 +82,4 @@ class FileInstance(BaseHandler):
     def delete(self, key):
         yield del_file(key)
 
-        GLApiCache.invalidate()
+        GLApiCache.invalidate(self.request.current_tenant_id)

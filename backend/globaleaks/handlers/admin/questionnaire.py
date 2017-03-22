@@ -178,8 +178,11 @@ class QuestionnairesCollection(BaseHandler):
         Response: adminQuestionnaireList
         Errors: None
         """
-        response = yield GLApiCache.get('questionnaires', self.request.language,
-                                        get_questionnaire_list, self.request.language)
+        response = yield GLApiCache.get('questionnaires',
+                                        self.request.current_tenant_id,
+                                        self.request.language,
+                                        get_questionnaire_list,
+                                        self.request.language)
 
         self.write(response)
 
@@ -200,7 +203,7 @@ class QuestionnairesCollection(BaseHandler):
 
         response = yield create_questionnaire(request, self.request.language)
 
-        GLApiCache.invalidate()
+        GLApiCache.invalidate(self.request.current_tenant_id)
 
         self.set_status(201)
         self.write(response)
@@ -241,7 +244,7 @@ class QuestionnaireInstance(BaseHandler):
 
         response = yield update_questionnaire(questionnaire_id, request, self.request.language)
 
-        GLApiCache.invalidate()
+        GLApiCache.invalidate(self.request.current_tenant_id)
 
         self.set_status(202)
         self.write(response)
@@ -258,4 +261,4 @@ class QuestionnaireInstance(BaseHandler):
         Errors: InvalidInputFormat, QuestionnaireIdNotFound
         """
         yield delete_questionnaire(questionnaire_id)
-        GLApiCache.invalidate()
+        GLApiCache.invalidate(self.request.current_tenant_id)

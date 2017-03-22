@@ -91,6 +91,6 @@ class Wizard(BaseHandler):
         yield wizard(self.request.current_tenant_id, request, self.request.language)
         # cache must be updated in order to set wizard_done = True
         yield serialize_node(self.request.language)
-        GLApiCache.invalidate()
+        GLApiCache.invalidate(self.request.current_tenant_id)
 
         self.set_status(201)  # Created

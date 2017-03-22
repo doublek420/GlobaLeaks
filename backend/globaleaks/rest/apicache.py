@@ -2,35 +2,50 @@ from twisted.internet.defer import inlineCallbacks, returnValue
 
 
 class GLApiCache(object):
-    memory_cache_dict = {}
+    per_tenant_cache = {}
+
+    @classmethod
+    def add_tenant(cls, tid):
+        cls.per_tenant_cache[tid] = {}
 
     @classmethod
     @inlineCallbacks
-    def get(cls, resource_name, language, function, *args, **kwargs):
-        if resource_name in cls.memory_cache_dict \
-                and language in cls.memory_cache_dict[resource_name]:
-            returnValue(cls.memory_cache_dict[resource_name][language])
+    def get(cls, current_tid, resource_name, language, function, *args, **kwargs):
+        memory_cache_dict = cls.per_tenant_cache.get(current_tid ,{})
+
+        if resource_name in memory_cache_dict \
+                and language in memory_cache_dict[resource_name]:
+            returnValue(memory_cache_dict[resource_name][language])
 
         value = yield function(*args, **kwargs)
-        if resource_name not in cls.memory_cache_dict:
-            cls.memory_cache_dict[resource_name] = {}
-        cls.memory_cache_dict[resource_name][language] = value
+        if resource_name not in memory_cache_dict:
+            memory_cache_dict[resource_name] = {}
+        memory_cache_dict[resource_name][language] = value
         returnValue(value)
 
     @classmethod
-    def set(cls, resource_name, language, value):
-        if resource_name not in GLApiCache.memory_cache_dict:
-            cls.memory_cache_dict[resource_name] = {}
+    def set(cls, current_tid, resource_name, language, value):
+        memory_cache_dict = cls.per_tenant_cache.get(current_tid, {})
+        if resource_name not in memory_cache_dict:
+            memory_cache_dict[resource_name] = {}
 
-        cls.memory_cache_dict[resource_name][language] = value
+        memory_cache_dict[resource_name][language] = value
 
     @classmethod
-    def invalidate(cls, resource_name=None):
+    def invalidate_all(cls):
         """
-        When a function has an update, all the languages need to be
-        invalidated, because the change is still effective
+        Drops the cache for every tenant
         """
+        cls.per_tenant_cache = {}
+
+    @classmethod
+    def invalidate(cls, current_tid, resource_name=None):
+        """
+        When a function is updated, all of the cached content will be dropped
+        for that tenant
+        """
+        memory_cache_dict = cls.per_tenant_cache.get(current_tid, {})
         if resource_name is None:
-            cls.memory_cache_dict = {}
+            memory_cache_dict = {}
         else:
-            cls.memory_cache_dict.pop(resource_name, None)
+            memory_cache_dict.pop(resource_name, None)

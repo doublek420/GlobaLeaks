@@ -52,7 +52,10 @@ class L10NHandler(BaseHandler):
     def get(self, lang):
         self.set_header('Content-Type', 'application/json')
 
-        l10n = yield GLApiCache.get('l10n', self.request.language,
-                                    get_l10n, self.request.language)
+        l10n = yield GLApiCache.get('l10n',
+                                    self.request.current_tenant_id,
+                                    self.request.language,
+                                    get_l10n,
+                                    self.request.language)
 
         self.write(l10n)

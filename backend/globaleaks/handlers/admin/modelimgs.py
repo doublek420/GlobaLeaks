@@ -62,7 +62,7 @@ class ModelImgInstance(BaseHandler):
         finally:
             uploaded_file['body'].close()
 
-        GLApiCache.invalidate()
+        GLApiCache.invalidate(self.request.current_tenant_id)
 
         self.set_status(201)
 
@@ -72,4 +72,4 @@ class ModelImgInstance(BaseHandler):
     def delete(self, obj_key, obj_id):
         yield del_model_img(model_map[obj_key], obj_id)
 
-        GLApiCache.invalidate()
+        GLApiCache.invalidate(self.request.current_tenant_id)

@@ -264,7 +264,7 @@ class ContextsCollection(BaseHandler):
 
         response = yield create_context(request, self.request.language)
 
-        GLApiCache.invalidate()
+        GLApiCache.invalidate(self.request.current_tenant_id)
 
         self.set_status(201) # Created
         self.write(response)
@@ -304,7 +304,7 @@ class ContextInstance(BaseHandler):
                                         requests.AdminContextDesc)
 
         response = yield update_context(context_id, request, self.request.language)
-        GLApiCache.invalidate()
+        GLApiCache.invalidate(self.request.current_tenant_id)
 
         self.set_status(202) # Updated
         self.write(response)
@@ -321,4 +321,4 @@ class ContextInstance(BaseHandler):
         Errors: InvalidInputFormat, ContextIdNotFound
         """
         yield delete_context(context_id)
-        GLApiCache.invalidate()
+        GLApiCache.invalidate(self.request.current_tenant_id)

@@ -240,7 +240,7 @@ class UsersCollection(BaseHandler):
         else:
             raise errors.InvalidInputFormat
 
-        GLApiCache.invalidate()
+        GLApiCache.invalidate(self.request.current_tenant_id)
 
         self.set_status(201) # Created
         self.write(response)
@@ -277,7 +277,7 @@ class UserInstance(BaseHandler):
         request = self.validate_message(self.request.body, requests.AdminUserDesc)
 
         response = yield admin_update_user(user_id, request, self.request.language)
-        GLApiCache.invalidate()
+        GLApiCache.invalidate(self.request.current_tenant_id)
 
         self.set_status(201)
         self.write(response)
@@ -296,4 +296,4 @@ class UserInstance(BaseHandler):
         """
         yield delete_user(user_id)
 
-        GLApiCache.invalidate()
+        GLApiCache.invalidate(self.request.current_tenant_id)

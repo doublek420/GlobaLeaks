@@ -66,7 +66,7 @@ class AdminL10NHandler(BaseHandler):
 
         yield update_custom_texts(self.request.current_tenant_id, lang, request)
 
-        GLApiCache.invalidate()
+        GLApiCache.invalidate(self.request.current_tenant_id)
 
         self.set_status(202)  # Updated
 
@@ -76,4 +76,4 @@ class AdminL10NHandler(BaseHandler):
     def delete(self, lang):
         yield delete_custom_texts(self.request.current_tenant_id, lang)
 
-        GLApiCache.invalidate()
+        GLApiCache.invalidate(self.request.current_tenant_id)

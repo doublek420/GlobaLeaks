@@ -142,7 +142,7 @@ class NodeInstance(BaseHandler):
                                         requests.AdminNodeDesc)
 
         node_description = yield update_node(request, self.request.language)
-        GLApiCache.invalidate()
+        GLApiCache.invalidate(self.request.current_tenant_id)
 
         self.set_status(202) # Updated
         self.write(node_description)
