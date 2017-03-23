@@ -2,9 +2,8 @@ PRAGMA foreign_keys = ON;
 PRAGMA auto_vacuum = FULL;
 
 CREATE TABLE tenant (
-    id TEXT NOT NULL,
-    label TEXT NOT NULL,
-    PRIMARY KEY (id)
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    label TEXT NOT NULL
 );
 
 CREATE TABLE enabledlanguage (
@@ -412,10 +411,12 @@ CREATE TABLE counter (
 
 CREATE TABLE shorturl (
     id TEXT NOT NULL,
+    tid INTEGER NOT NULL,
     shorturl TEXT NOT NULL,
     longurl TEXT NOT NULL,
     UNIQUE (shorturl),
-    PRIMARY KEY (id)
+    FOREIGN KEY (tid) REFERENCES tenant(id) ON DELETE CASCADE,
+    PRIMARY KEY (tid, id)
 );
 
 CREATE TABLE file (

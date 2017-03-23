@@ -142,10 +142,11 @@ class ModelWithID(Model):
         return store.find(cls, cls.id == obj_id).one()
 
 
-class Tenant(ModelWithID):
+class Tenant(Model):
     """
-    Class used to implement tenants
+    Class used to implement multi tenancy.
     """
+    id = Int(primary=True) # TODO Note may become text again
     label = Unicode(validator=shorttext_v)
 
     unicode_keys = ['label']
@@ -680,6 +681,7 @@ class ShortURL(ModelWithID):
     """
     Class used to implement url shorteners
     """
+    tid = Int()
     shorturl = Unicode(validator=shorturl_v)
     longurl = Unicode(validator=longurl_v)
 
