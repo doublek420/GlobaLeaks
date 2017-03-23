@@ -10,6 +10,7 @@ from globaleaks import models
 from globaleaks.handlers.base import BaseHandler
 from globaleaks.orm import transact
 from globaleaks.rest import requests
+from globaleaks.db import db_refresh_memory_variables
 
 
 def serialize_tenant(tenant):
@@ -19,16 +20,22 @@ def serialize_tenant(tenant):
     }
 
 
-@transact
-def get_tenant_list(store):
+def db_get_tenant_list(store):
     tenants = store.find(models.Tenant)
     return [serialize_tenant(tenant) for tenant in tenants]
+
+
+@transact
+def get_tenant_list(store):
+    return db_get_tenant_list(store)
 
 
 @transact
 def create_tenant(store, request):
     tenant = models.Tenant(request)
     store.add(tenant)
+
+    db_refresh_memory_variables(store)
     return serialize_tenant(tenant)
 
 
@@ -37,6 +44,8 @@ def delete_tenant(store, tenant_id):
     tenant = store.find(models.Tenant, models.Tenant.id == tenant_id).one()
     if tenant:
         store.remove(tenant)
+
+    db_refresh_memory_variables(store)
 
 
 class TenantCollection(BaseHandler):
@@ -61,6 +70,7 @@ class TenantCollection(BaseHandler):
         request = self.validate_message(self.request.body, requests.AdminTenantDesc)
 
         response = yield create_tenant(request)
+
 
         self.set_status(201) # Created
         self.write(response)

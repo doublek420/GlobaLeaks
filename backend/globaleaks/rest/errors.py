@@ -58,7 +58,7 @@ class InvalidInputFormat(GLException):
     The expected format described in the REST specification is not
     respected by the data body in the HTTP request.
     """
-    error_code = 2
+    error_code = 3
     status_code = 406  # Not Acceptable
 
     def __init__(self, wrong_source):
@@ -70,11 +70,23 @@ class TokenFailure(GLException):
     """
     Some kind of reason to reject a submission Token
     """
-    error_code = 3
+    error_code = 4
     status_code = 401  # Unauthorized
 
     def __init__(self, reason):
         self.reason = ("Unacceptable condition for usage of Token: %s" % reason)
+
+
+class TenantIDNotFound(GLException):
+    """
+    It has been requested an operation on a non existent static file
+    """
+    reason = "The requested hostname is not a tenant"
+    error_code = 5
+    status_code = 400
+
+
+# 5-10 are unused error codes #
 
 
 class ContextIdNotFound(GLException):
@@ -346,6 +358,12 @@ class LangFileNotFound(GLException):
     status_code = 404
 
 
+class SubmissionDisabled(GLException):
+    reason = "Submissions are not possible right now"
+    error_code = 52
+    status_code = 503  # Service not available
+
+
 class DirectoryTraversalError(GLException):
     """
     Blocked file operation out of the expected path
@@ -355,13 +373,7 @@ class DirectoryTraversalError(GLException):
     status_code = 403
 
 
-class SubmissionDisabled(GLException):
-    reason = "Submissions are not possible right now"
-    error_code = 52
-    status_code = 503  # Service not available
-
-
-# UNUSED ERROR CODE 53, 54, 55, 56, 57 HERE!
+# UNUSED ERROR CODE 54, 55, 56, 57 HERE!
 
 
 class FieldIdNotFound(GLException):

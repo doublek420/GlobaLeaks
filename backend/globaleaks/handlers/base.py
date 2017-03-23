@@ -190,26 +190,6 @@ class BaseHandler(RequestHandler):
 
         self.request.start_time = datetime_now()
 
-        self.request.request_type = None
-        if 'import' in self.request.arguments:
-            self.request.request_type = 'import'
-        elif 'export' in self.request.arguments:
-            self.request.request_type = 'export'
-
-        language = self.request.headers.get('GL-Language')
-
-        if language is None:
-            for l in self.parse_accept_language_header():
-                if l in GLSettings.memory_copy.languages_enabled:
-                    language = l
-                    break
-
-        if language is None or language not in GLSettings.memory_copy.languages_enabled:
-            language = GLSettings.memory_copy.default_language
-
-        self.request.language = language
-        self.set_header("Content-Language", language)
-
     def parse_accept_language_header(self):
         if "Accept-Language" in self.request.headers:
             languages = self.request.headers["Accept-Language"].split(",")
@@ -493,18 +473,51 @@ class BaseHandler(RequestHandler):
         pass
 
     def prepare(self):
-        log.debug('Received request from: %s: %s' % (self.request.remote_ip, self.request.headers))
+        # Map a hostname to the tenant ID for the request
+        host_hdr = self.request.headers.get('Host')
+        # TODO(tid_me) study of tor redirect and https redirect below
+        tid = GLSettings.memory_copy.tenant_map.get(host_hdr, None)
+        if tid is None:
+            raise errors.TenantIDNotFound()
+
+        self.request.current_tenant_id = tid
+
         if should_redirect_https(self.request,
                                  GLSettings.memory_copy.private.https_enabled,
                                  GLSettings.local_hosts):
-            log.debug('Decided to redirect')
+            log.debug('Decided to redirect to https')
             self.redirect_https()
 
         # TODO handle the case where we are not interested in applying the exit list
         if should_redirect_tor(self.request,
                                GLSettings.tor_address,
                                GLSettings.state.tor_exit_set):
+            log.debug('Decided to redirect to tor')
             self.redirect_tor(GLSettings.tor_address)
+
+        # TODO TODO TODO
+        # TODO(tid_me) Moved the below block to use current_tenant_id
+        self.request.request_type = None
+        # TODO subclass BaseHandler in admin/fields
+        if 'import' in self.request.arguments:
+            self.request.request_type = 'import'
+        elif 'export' in self.request.arguments:
+            self.request.request_type = 'export'
+
+        language = self.request.headers.get('GL-Language')
+
+        if language is None:
+            for l in self.parse_accept_language_header():
+                if l in GLSettings.memory_copy.languages_enabled:
+                    language = l
+                    break
+
+        if language is None or language not in GLSettings.memory_copy.languages_enabled:
+            language = GLSettings.memory_copy.default_language
+
+        self.request.language = language
+        self.set_header("Content-Language", language)
+        # TODO TODO TODO
 
     def redirect_https(self):
         in_url = self.request.full_url()

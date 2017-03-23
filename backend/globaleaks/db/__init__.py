@@ -12,7 +12,7 @@ from twisted.internet.defer import inlineCallbacks
 from globaleaks import models, security, DATABASE_VERSION, FIRST_DATABASE_VERSION_SUPPORTED
 from globaleaks.db.appdata import db_update_appdata, db_fix_fields_attrs
 from globaleaks.handlers.admin import files
-from globaleaks.models import config, l10n, User
+from globaleaks.models import config, l10n, User, Tenant
 from globaleaks.models.config import NodeFactory, NotificationFactory, PrivateFactory
 from globaleaks.models.l10n import EnabledLanguage
 from globaleaks.orm import transact, transact_sync
@@ -47,6 +47,9 @@ def init_db(store, use_single_lang=False):
     appdata_dict = db_update_appdata(store)
 
     log.debug("Performing database initialization...")
+    first_tenant = Tenant()
+    first_tenant.label = "localhost:8082"
+    store.add(first_tenant)
 
     config.system_cfg_init(store)
 
@@ -172,6 +175,10 @@ def db_refresh_memory_variables(store):
 
     if GLSettings.developer_name:
         GLSettings.memory_copy.notif.source_name = GLSettings.developer_name
+
+    tenants = store.find(Tenant) # TODO(tid_me) Must be removed
+    GLSettings.memory_copy.tenant_map = {t.label: t.id for t in tenants}
+    GLSettings.memory_copy.first_tenant_id = GLSettings.memory_copy.tenant_map['localhost:8082']
 
     db_refresh_exception_delivery_list(store)
 
