@@ -4,6 +4,7 @@
 #   *****
 # Implementation of the URL shortener handlers
 #
+from storm.expr import And
 from twisted.internet.defer import inlineCallbacks
 
 from globaleaks import models
@@ -15,7 +16,8 @@ from globaleaks.rest import requests, errors
 def serialize_shorturl(shorturl):
     return {
         'shorturl': shorturl.shorturl,
-        'longurl': shorturl.longurl
+        'longurl': shorturl.longurl,
+        'id': shorturl.id
     }
 
 
@@ -35,9 +37,10 @@ def create_shorturl(store, tid, request):
 
 
 @transact
-def delete_shorturl(store, tid):
+def delete_shorturl(store, tid, id):
     shorturl = store.find(models.ShortURL,
-                          models.ShortURL.tid == tid).one()
+                          And(models.ShortURL.tid == tid,
+                              models.ShortURL.id == id)).one()
     if not shorturl:
         raise errors.ShortURLIdNotFound
 

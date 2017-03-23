@@ -1,3 +1,4 @@
+from storm.expr import And
 from twisted.internet.defer import inlineCallbacks
 
 from globaleaks import models
@@ -25,5 +26,5 @@ class ShortUrlInstance(BaseHandler):
     @BaseHandler.unauthenticated
     @inlineCallbacks
     def get(self, shorturl):
-        longurl = yield translate_shorturl(self.requests.current_tenant_id, shorturl)
+        longurl = yield translate_shorturl(self.request.current_tenant_id, shorturl)
         self.redirect(longurl)
