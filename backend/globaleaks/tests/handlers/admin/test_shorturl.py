@@ -12,7 +12,7 @@ class TesShortURLCollection(helpers.TestHandlerWithPopulatedDB):
     @inlineCallbacks
     def test_get(self):
         for i in range(3):
-            yield shorturl.create_shorturl(self.get_dummy_shorturl(str(i)))
+            yield shorturl.create_shorturl(1, self.get_dummy_shorturl(str(i)))
 
         handler = self.request(role='admin')
         yield handler.get()
@@ -32,7 +32,7 @@ class TesShortURLInstance(helpers.TestHandlerWithPopulatedDB):
     @inlineCallbacks
     def test_delete(self):
         shorturl_desc = self.get_dummy_shorturl()
-        shorturl_desc = yield shorturl.create_shorturl(shorturl_desc)
+        shorturl_desc = yield shorturl.create_shorturl(1, shorturl_desc)
 
         handler = self.request(role='admin')
         yield handler.delete(shorturl_desc['id'])

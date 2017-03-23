@@ -46,7 +46,6 @@ def init_db(store, use_single_lang=False):
     db_create_tables(store)
 
     root_tenant = {'label': 'localhost:8082'}
-    print('running')
     tenant.db_create_tenant(store, root_tenant, use_single_lang)
 
     log.debug("Performing database initialization...")
@@ -142,7 +141,7 @@ def db_refresh_exception_delivery_list(store):
     Constructs a list of (email_addr, public_key) pairs that will receive errors from the platform.
     If the email_addr is empty, drop the tuple from the list.
     """
-    notif_fact = NotificationFactory(store)
+    notif_fact = NotificationFactory(store, 1)
     error_addr = notif_fact.get_val('exception_email_address')
     error_pk = notif_fact.get_val('exception_email_pgp_key_public')
 
@@ -161,7 +160,7 @@ def db_refresh_memory_variables(store):
     This routine loads in memory few variables of node and notification tables
     that are subject to high usage.
     """
-    node_ro = ObjectDict(NodeFactory(store).admin_export())
+    node_ro = ObjectDict(NodeFactory(store, 1).admin_export())
 
     GLSettings.memory_copy = node_ro
 
@@ -176,7 +175,7 @@ def db_refresh_memory_variables(store):
     enabled_langs = models.l10n.EnabledLanguage.list(store)
     GLSettings.memory_copy.languages_enabled = enabled_langs
 
-    notif_fact = NotificationFactory(store)
+    notif_fact = NotificationFactory(store, 1)
     notif_ro = ObjectDict(notif_fact.admin_export())
 
     GLSettings.memory_copy.notif = notif_ro
@@ -191,7 +190,7 @@ def db_refresh_memory_variables(store):
 
     db_refresh_exception_delivery_list(store)
 
-    GLSettings.memory_copy.private = ObjectDict(PrivateFactory(store).mem_copy_export())
+    GLSettings.memory_copy.private = ObjectDict(PrivateFactory(store, 1).mem_copy_export())
 
 
 @transact

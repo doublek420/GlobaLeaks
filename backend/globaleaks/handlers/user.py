@@ -78,8 +78,7 @@ def user_serialize_user(user, language):
 
 @transact
 def get_user_settings(store, user_id, language):
-    user = store.find(models.User, models.User.id == user_id).one()
-
+    user = store.find(models.User, id=user_id).one()
     if not user:
         raise errors.UserIdNotFound
 
@@ -96,8 +95,7 @@ def db_user_update_user(store, user_id, request, language):
       - pgp key
     raises: globaleaks.errors.ReceiverIdNotFound` if the receiver does not exist.
     """
-    user = models.User.get(store, user_id)
-
+    user = store.find(models.User, id=user_id).one()
     if not user:
         raise errors.UserIdNotFound
 

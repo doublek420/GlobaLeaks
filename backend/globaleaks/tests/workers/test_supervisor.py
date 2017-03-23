@@ -24,7 +24,7 @@ from globaleaks.tests.utils import test_tls
 
 @transact
 def toggle_https(store, enabled):
-    PrivateFactory(store).set_val('https_enabled', enabled)
+    PrivateFactory(store, 1).set_val('https_enabled', enabled)
 
 class TestProcessSupervisor(helpers.TestGL):
     @inlineCallbacks

@@ -1,31 +1,25 @@
 from storm.locals import Bool, Int, Reference, ReferenceSet, Unicode, Storm, JSON
 
-from globaleaks.models import Model, ShortURL
+from globaleaks.models import ModelWithID
 from globaleaks.models.validators import shorttext_v
 from globaleaks.utils.utility import log
 
 
-class Tenant(Model):
+class Tenant(ModelWithID):
     """
-    Class used to implement multi tenancy.
+    Class used to implement tenants
     """
-    id = Int(primary=True) # TODO Note may become text again
     label = Unicode(validator=shorttext_v)
 
     unicode_keys = ['label']
+
 
 def db_create_tenant(store, desc, use_single_lang=False):
     # NOTE Invalidates memory_var cache but does not refresh it
     tenant = Tenant(desc)
     store.add(tenant)
-    store.commit()
 
     log.debug("Creating %s" % tenant)
-
-    # Note an example of a tenant resource
-    sh = ShortURL({'shorturl':'/s/exampleres', 'longurl':'/exampleres'})
-    sh.tid = tenant.id
-    store.add(sh)
 
     return tenant
 

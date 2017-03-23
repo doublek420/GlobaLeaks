@@ -3,10 +3,10 @@
 from storm.locals import Int, Bool, Unicode, JSON
 
 from globaleaks.db.migrations.update import MigrationBase
-from globaleaks.models import ModelWithID
+from globaleaks.models import ModelWithUID
 
 
-class Node_v_28(ModelWithID):
+class Node_v_28(ModelWithUID):
     __storm_table__ = 'node'
     version = Unicode()
     version_db = Unicode()
@@ -71,7 +71,7 @@ class Node_v_28(ModelWithID):
     threshold_free_disk_percentage_low = Int()
 
 
-class Context_v_28(ModelWithID):
+class Context_v_28(ModelWithUID):
     __storm_table__ = 'context'
     show_small_cards = Bool()
     show_context = Bool()

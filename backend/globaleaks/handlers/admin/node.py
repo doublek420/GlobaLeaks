@@ -23,14 +23,14 @@ from globaleaks.utils.utility import log
 
 
 def db_admin_serialize_node(store, language):
-    node_dict = NodeFactory(store).admin_export()
+    node_dict = NodeFactory(store, 1).admin_export()
 
     # Contexts and Receivers relationship
     configured  = store.find(models.ReceiverContext).count() > 0
     custom_homepage = os.path.isfile(os.path.join(GLSettings.static_path, "custom_homepage.html"))
 
     misc_dict = {
-        'version': PrivateFactory(store).get_val('version'),
+        'version': PrivateFactory(store, 1).get_val('version'),
         'languages_supported': LANGUAGES_SUPPORTED,
         'languages_enabled': EnabledLanguage.list(store),
         'configured': configured,
@@ -92,7 +92,7 @@ def db_update_node(store, request, language):
         node_l10n = NodeL10NFactory(store)
         node_l10n.update(request, language)
 
-    node = NodeFactory(store)
+    node = NodeFactory(store, 1)
     node.update(request)
 
     if request['basic_auth'] and request['basic_auth_username'] != '' and request['basic_auth_password']  != '':

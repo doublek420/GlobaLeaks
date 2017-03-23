@@ -18,7 +18,7 @@ from globaleaks.db.migrations.update import MigrationBase
 from globaleaks.handlers.admin.field import db_create_field
 from globaleaks.models import config, Field
 from globaleaks.models.config_desc import GLConfig
-from globaleaks.models.l10n import EnabledLanguage, NotificationL10NFactory
+from globaleaks.models.l10n import EnabledLanguage, NotificationL10NFactory, ConfigL10N
 from globaleaks.settings import GLSettings
 from globaleaks.tests import helpers, config as test_config
 from globaleaks.rest import errors
@@ -71,7 +71,7 @@ class TestConfigUpdates(unittest.TestCase):
 
         # place a dummy version in the current db
         store = Store(create_database(GLSettings.db_uri))
-        prv = config.PrivateFactory(store)
+        prv = config.PrivateFactory(store, 1)
         self.dummy_ver = '2.XX.XX'
         prv.set_val('version', self.dummy_ver)
         self.assertEqual(prv.get_val('version'), self.dummy_ver)
@@ -106,7 +106,7 @@ class TestConfigUpdates(unittest.TestCase):
         migration.perform_data_update(self.db_file)
 
         store = Store(create_database(GLSettings.db_uri))
-        prv = config.PrivateFactory(store)
+        prv = config.PrivateFactory(store, 1)
         self.assertEqual(prv.get_val('version'), __version__)
         self.assertEqual(prv.get_val('xx_smtp_password'), self.dp)
         ret = config.is_cfg_valid(store)
@@ -117,7 +117,7 @@ class TestConfigUpdates(unittest.TestCase):
         migration.perform_data_update(self.db_file)
 
         store = Store(create_database(GLSettings.db_uri))
-        prv = config.PrivateFactory(store)
+        prv = config.PrivateFactory(store, 1)
         self.assertEqual(prv.get_val('version'), __version__)
         store.close()
 
@@ -129,7 +129,7 @@ class TestConfigUpdates(unittest.TestCase):
 
         # Ensure the rollback has succeeded
         store = Store(create_database(GLSettings.db_uri))
-        prv = config.PrivateFactory(store)
+        prv = config.PrivateFactory(store, 1)
         self.assertEqual(prv.get_val('version'), self.dummy_ver)
         store.close()
 
@@ -140,14 +140,14 @@ class TestConfigUpdates(unittest.TestCase):
         self.assertRaises(IOError, migration.perform_data_update, self.db_file)
 
         store = Store(create_database(GLSettings.db_uri))
-        prv = config.PrivateFactory(store)
+        prv = config.PrivateFactory(store, 1)
         self.assertEqual(prv.get_val('version'), self.dummy_ver)
         store.close()
 
     def test_trim_value_to_range(self):
         store = Store(create_database(GLSettings.db_uri))
 
-        nf = config.NodeFactory(store)
+        nf = config.NodeFactory(store, 1)
         fake_cfg = nf.get_cfg('wbtip_timetolive')
 
         self.assertRaises(errors.InvalidModelInput, fake_cfg.set_v, 3650)
@@ -196,55 +196,17 @@ class TestMigrationRegression(unittest.TestCase):
 
         self.store = Store(create_database(GLSettings.db_uri))
 
-    def test_check_field_constraints(self):
-        # This test case asserts that a migration from db ver 32 up to the latest
-        # db with fields that fail the constraints still functions.
-        self._initStartDB(32)
-
-        field_dict = helpers.get_dummy_field()
-        field_dict['instance'] = 'reference'
-        field_dict['step_id'] = None
-        field_dict['field_id'] = None
-
-        db_create_field(self.store, field_dict, u'en')
-
-        field_dict = helpers.get_dummy_field()
-        field_dict['instance'] = 'instance'
-
-        db_create_field(self.store, field_dict, u'en')
-
-        field_dict = helpers.get_dummy_field()
-        field_dict['instance'] = 'template'
-        field_dict['step_id'] = None
-        fld_grp_id = self.store.find(Field, Field.fieldgroup_id is not None)[0].fieldgroup_id
-        field_dict['field_id'] = fld_grp_id
-
-        db_create_field(self.store, field_dict, u'en')
-        self.store.commit()
-
-        ret = update_db()
-        shutil.rmtree(GLSettings.db_path)
-        self.assertNotEqual(ret, -1)
-
     def test_check_unmodifiable_strings(self):
         # This test case asserts that data migration updates unmodifiable l10n strings
-        self._initStartDB(34)
+        self._initStartDB(DATABASE_VERSION)
 
         notification_l10n = NotificationL10NFactory(self.store)
-
-        t0 = notification_l10n.get_val('export_template', 'it')
-
-        notification_l10n.set_val('export_template', 'it', '')
-
-        t1 = notification_l10n.get_val('export_template', 'it')
-
-        self.assertEqual(t1, '')
-
+        notification_l10n.set_val('export_template', 'en', 'XXX')
         self.store.commit()
 
         # place a dummy version in the current db
         store = Store(create_database(GLSettings.db_uri))
-        prv = config.PrivateFactory(store)
+        prv = config.PrivateFactory(store, 1)
         self.dummy_ver = '2.XX.XX'
         prv.set_val('version', self.dummy_ver)
         self.assertEqual(prv.get_val('version'), self.dummy_ver)
@@ -255,8 +217,8 @@ class TestMigrationRegression(unittest.TestCase):
 
         store = Store(create_database(GLSettings.db_uri))
         notification_l10n = NotificationL10NFactory(store)
-        t2 = notification_l10n.get_val('export_template', 'it')
-        self.assertEqual(t2, t0)
+        v = notification_l10n.get_val('export_template', 'it')
+        self.assertNotEqual(v, 'XXX')
         store.commit()
         store.close()
 

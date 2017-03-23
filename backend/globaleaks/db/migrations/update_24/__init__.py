@@ -7,12 +7,12 @@ from storm.locals import Int, Bool, Unicode, DateTime, JSON, Reference
 
 from globaleaks import models, __version__, DATABASE_VERSION
 from globaleaks.db.migrations.update import MigrationBase
-from globaleaks.models import ModelWithID
+from globaleaks.models import ModelWithUID
 from globaleaks.utils.structures import fill_localized_keys
 from globaleaks.utils.utility import datetime_null
 
 
-class Node_v_23(ModelWithID):
+class Node_v_23(ModelWithUID):
     __storm_table__ = 'node'
     name = Unicode()
     public_site = Unicode()
@@ -60,7 +60,7 @@ class Node_v_23(ModelWithID):
     exception_email = Unicode()
 
 
-class User_v_23(ModelWithID):
+class User_v_23(ModelWithUID):
     __storm_table__ = 'user'
     creation_date = DateTime()
     username = Unicode()
@@ -76,7 +76,7 @@ class User_v_23(ModelWithID):
     password_change_date = DateTime()
 
 
-class Notification_v_23(ModelWithID):
+class Notification_v_23(ModelWithUID):
     __storm_table__ = 'notification'
     server = Unicode()
     port = Int()
@@ -119,7 +119,7 @@ class Notification_v_23(ModelWithID):
     notification_suspension_time = Int()
 
 
-class Receiver_v_23(ModelWithID):
+class Receiver_v_23(ModelWithUID):
     __storm_table__ = 'receiver'
     name = Unicode()
     description = JSON()
@@ -141,7 +141,7 @@ class Receiver_v_23(ModelWithID):
 Receiver_v_23.user = Reference(Receiver_v_23.id, User_v_23.id)
 
 
-class Context_v_23(ModelWithID):
+class Context_v_23(ModelWithUID):
     __storm_table__ = 'context'
     show_small_cards = Bool()
     show_receivers = Bool()
@@ -157,7 +157,7 @@ class Context_v_23(ModelWithID):
     presentation_order = Int()
 
 
-class InternalTip_v_23(ModelWithID):
+class InternalTip_v_23(ModelWithUID):
     __storm_table__ = 'internaltip'
     creation_date = DateTime()
     context_id = Unicode()
@@ -173,7 +173,7 @@ class InternalTip_v_23(ModelWithID):
 InternalTip_v_23.context = Reference(InternalTip_v_23.context_id, Context_v_23.id)
 
 
-class ReceiverTip_v_23(ModelWithID):
+class ReceiverTip_v_23(ModelWithUID):
     __storm_table__ = 'receivertip'
     internaltip_id = Unicode()
     receiver_id = Unicode()
@@ -184,7 +184,7 @@ class ReceiverTip_v_23(ModelWithID):
     new = Int()
 
 
-class Step_v_23(ModelWithID):
+class Step_v_23(ModelWithUID):
     __storm_table__ = 'step'
     context_id = Unicode()
     label = JSON()
@@ -193,7 +193,7 @@ class Step_v_23(ModelWithID):
     presentation_order = Int()
 
 
-class Field_v_23(ModelWithID):
+class Field_v_23(ModelWithUID):
     __storm_table__ = 'field'
     x = Int()
     y = Int()
@@ -211,7 +211,7 @@ class Field_v_23(ModelWithID):
     type = Unicode()
 
 
-class ArchivedSchema_v_23(ModelWithID):
+class ArchivedSchema_v_23(ModelWithUID):
     __storm_table__ = 'archivedschema'
     hash = Unicode()
     type = Unicode()

@@ -3,10 +3,10 @@
 from storm.locals import Int, Bool, Unicode, JSON
 
 from globaleaks.db.migrations.update import MigrationBase
-from globaleaks.models import ModelWithID, Model
+from globaleaks.models import ModelWithUID, Model
 
 
-class Field_v_27(ModelWithID):
+class Field_v_27(ModelWithUID):
     __storm_table__ = 'field'
     x = Int()
     y = Int()
@@ -27,7 +27,7 @@ class Field_v_27(ModelWithID):
     editable = Bool()
 
 
-class Step_v_27(ModelWithID):
+class Step_v_27(ModelWithUID):
     __storm_table__ = 'step'
     context_id = Unicode()
     label = JSON()
@@ -35,7 +35,7 @@ class Step_v_27(ModelWithID):
     presentation_order = Int()
 
 
-class FieldOption_v_27(ModelWithID):
+class FieldOption_v_27(ModelWithUID):
     __storm_table__ = 'fieldoption'
     field_id = Unicode()
     presentation_order = Int()

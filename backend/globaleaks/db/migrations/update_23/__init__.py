@@ -8,12 +8,12 @@ from storm.locals import Int, Bool, Unicode, DateTime, JSON, ReferenceSet
 from globaleaks.db.migrations.update import MigrationBase
 from globaleaks.handlers.admin.field import db_update_fieldattr
 from globaleaks.handlers.submission import extract_answers_preview
-from globaleaks.models import ModelWithID
+from globaleaks.models import ModelWithUID
 from globaleaks.security import sha256, generateRandomKey
 from globaleaks.settings import GLSettings
 
 
-class InternalFile_v_22(ModelWithID):
+class InternalFile_v_22(ModelWithUID):
     __storm_table__ = 'internalfile'
     creation_date = DateTime()
     internaltip_id = Unicode()
@@ -24,7 +24,7 @@ class InternalFile_v_22(ModelWithID):
     new = Int()
 
 
-class Comment_v_22(ModelWithID):
+class Comment_v_22(ModelWithUID):
     __storm_table__ = 'comment'
     creation_date = DateTime()
     internaltip_id = Unicode()
@@ -35,7 +35,7 @@ class Comment_v_22(ModelWithID):
     new = Int(default=True)
 
 
-class Context_v_22(ModelWithID):
+class Context_v_22(ModelWithUID):
     __storm_table__ = 'context'
     show_small_cards = Bool()
     show_receivers = Bool()
@@ -51,7 +51,7 @@ class Context_v_22(ModelWithID):
     presentation_order = Int()
 
 
-class Field_v_22(ModelWithID):
+class Field_v_22(ModelWithUID):
     __storm_table__ = 'field'
     label = JSON()
     description = JSON()
@@ -66,7 +66,7 @@ class Field_v_22(ModelWithID):
     type = Unicode()
 
 
-class FieldOption_v_22(ModelWithID):
+class FieldOption_v_22(ModelWithUID):
     __storm_table__ = 'fieldoption'
     field_id = Unicode()
     presentation_order = Int()
@@ -79,7 +79,7 @@ Field_v_22.options = ReferenceSet(
 )
 
 
-class InternalTip_v_22(ModelWithID):
+class InternalTip_v_22(ModelWithUID):
     __storm_table__ = 'internaltip'
     creation_date = DateTime()
     context_id = Unicode()
@@ -92,7 +92,7 @@ class InternalTip_v_22(ModelWithID):
     new = Int()
 
 
-class Notification_v_22(ModelWithID):
+class Notification_v_22(ModelWithUID):
     __storm_table__ = 'notification'
     server = Unicode()
     port = Int()

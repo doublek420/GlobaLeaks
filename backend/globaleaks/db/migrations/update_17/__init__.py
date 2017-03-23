@@ -12,12 +12,12 @@
 from storm.locals import Int, Bool, Unicode, DateTime, JSON
 
 from globaleaks.db.migrations.update import MigrationBase
-from globaleaks.models import ModelWithID
+from globaleaks.models import ModelWithUID
 from globaleaks.security import GLBPGP
 from globaleaks.utils.utility import datetime_null
 
 
-class Node_v_16(ModelWithID):
+class Node_v_16(ModelWithUID):
     __storm_table__ = 'node'
     name = Unicode()
     public_site = Unicode()
@@ -60,7 +60,7 @@ class Node_v_16(ModelWithID):
     exception_email = Unicode()
 
 
-class Notification_v_16(ModelWithID):
+class Notification_v_16(ModelWithUID):
     __storm_table__ = 'notification'
     server = Unicode()
     port = Int()
@@ -95,7 +95,7 @@ class Notification_v_16(ModelWithID):
     disable_receivers_notification_emails = Bool()
 
 
-class Receiver_v_16(ModelWithID):
+class Receiver_v_16(ModelWithUID):
     __storm_table__ = 'receiver'
     user_id = Unicode()
     name = Unicode()
@@ -119,7 +119,7 @@ class Receiver_v_16(ModelWithID):
     presentation_order = Int()
 
 
-class Stats_v_16(ModelWithID):
+class Stats_v_16(ModelWithUID):
     __storm_table__ = 'stats'
     start = DateTime()
     summary = JSON()

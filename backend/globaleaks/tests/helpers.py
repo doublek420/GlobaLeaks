@@ -121,7 +121,7 @@ def export_fixture(*models):
 
 @transact
 def update_node_setting(store, var_name, value):
-    models.config.NodeFactory(store).set_val(var_name, value)
+    models.config.NodeFactory(store, 1).set_val(var_name, value)
 
 
 def get_dummy_step():
@@ -418,21 +418,19 @@ class TestGL(unittest.TestCase):
             dummyFile['body'].close()
 
     @transact
-    def _exists(self, store, model, *id_args, **id_kwargs):
-        if not id_args and not id_kwargs:
-            raise ValueError
-        return model.get(store, *id_args, **id_kwargs) is not None
+    def _exists(self, store, model, **kwargs):
+        return store.find(model, **kwargs).one() is not None
 
     @inlineCallbacks
-    def assert_model_exists(self, model, *id_args, **id_kwargs):
-        existing = yield self._exists(model, *id_args, **id_kwargs)
-        msg = 'The following has *NOT* been found on the store: {} {}'.format(id_args, id_kwargs)
+    def assert_model_exists(self, model, **kwargs):
+        existing = yield self._exists(model, **kwargs)
+        msg = 'The following has *NOT* been found on the store: {}'.format(kwargs)
         self.assertTrue(existing, msg)
 
     @inlineCallbacks
-    def assert_model_not_exists(self, model, *id_args, **id_kwargs):
-        existing = yield self._exists(model, *id_args, **id_kwargs)
-        msg = 'The following model has been found on the store: {} {}'.format(id_args, id_kwargs)
+    def assert_model_not_exists(self, model, **kwargs):
+        existing = yield self._exists(model, **kwargs)
+        msg = 'The following model has been found on the store: {}'.format(kwargs)
         self.assertFalse(existing, msg)
 
     def pollute_events(self, number_of_times=10):
@@ -723,6 +721,11 @@ class TestHandler(TestGLWithPopulatedDB):
         connection.factory = application
         connection.makeConnection(tr)
 
+        if headers is None:
+            headers = {}
+
+        headers['Host'] = 'localhost:8082'
+
         request = httpserver.HTTPRequest(uri='mock',
                                          method=method,
                                          headers=headers,
@@ -755,6 +758,8 @@ class TestHandler(TestGLWithPopulatedDB):
         if role is not None:
             session = GLSession(user_id, role, 'enabled')
             handler.request.headers['X-Session'] = session.id
+
+        handler.prepare()
 
         return handler
 

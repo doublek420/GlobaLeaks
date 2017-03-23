@@ -57,12 +57,12 @@ class FileResource(object):
     @staticmethod
     @transact
     def should_gen_dh_params(store):
-        return PrivateFactory(store).get_val('https_dh_params') == u''
+        return PrivateFactory(store, 1).get_val('https_dh_params') == u''
 
     @staticmethod
     @transact
     def save_dh_params(store, dh_params):
-        PrivateFactory(store).set_val('https_dh_params', dh_params)
+        PrivateFactory(store, 1).set_val('https_dh_params', dh_params)
 
     @classmethod
     @inlineCallbacks
@@ -85,7 +85,7 @@ class PrivKeyFileRes(FileResource):
         db_cfg = load_tls_dict(store)
         db_cfg['ssl_key'] = raw_key
 
-        prv_fact = PrivateFactory(store)
+        prv_fact = PrivateFactory(store, 1)
         pkv = cls.validator()
         ok, err = pkv.validate(db_cfg)
         if ok:
@@ -99,7 +99,7 @@ class PrivKeyFileRes(FileResource):
     @staticmethod
     @transact
     def save_tls_key(store, prv_key):
-        prv_fact = PrivateFactory(store)
+        prv_fact = PrivateFactory(store, 1)
         prv_fact.set_val('https_priv_key', prv_key)
         prv_fact.set_val('https_priv_gen', True)
 
@@ -115,13 +115,13 @@ class PrivKeyFileRes(FileResource):
     @staticmethod
     @transact
     def delete_file(store):
-        prv_fact = PrivateFactory(store)
+        prv_fact = PrivateFactory(store, 1)
         prv_fact.set_val('https_priv_key', u'')
         prv_fact.set_val('https_priv_gen', False)
 
     @staticmethod
     def db_serialize(store):
-        prv_fact = PrivateFactory(store)
+        prv_fact = PrivateFactory(store, 1)
 
         return {
             'set': prv_fact.get_val('https_priv_key') != u'',
@@ -135,7 +135,7 @@ class CertFileRes(FileResource):
     @classmethod
     @transact
     def create_file(store, cls, raw_cert):
-        prv_fact = PrivateFactory(store)
+        prv_fact = PrivateFactory(store, 1)
 
         db_cfg = load_tls_dict(store)
         db_cfg['ssl_cert'] = raw_cert
@@ -151,18 +151,18 @@ class CertFileRes(FileResource):
     @staticmethod
     @transact
     def delete_file(store):
-        prv_fact = PrivateFactory(store)
+        prv_fact = PrivateFactory(store, 1)
         prv_fact.set_val('https_cert', u'')
 
     @staticmethod
     @transact
     def get_file(store):
-        prv_fact = PrivateFactory(store)
+        prv_fact = PrivateFactory(store, 1)
         return prv_fact.get_val('https_cert')
 
     @staticmethod
     def db_serialize(store):
-        c = PrivateFactory(store).get_val('https_cert')
+        c = PrivateFactory(store, 1).get_val('https_cert')
         if len(c) == 0:
             return {'name': 'cert', 'set': False}
 
@@ -183,7 +183,7 @@ class ChainFileRes(FileResource):
     @classmethod
     @transact
     def create_file(store, cls, raw_chain):
-        prv_fact = PrivateFactory(store)
+        prv_fact = PrivateFactory(store, 1)
 
         db_cfg = load_tls_dict(store)
         db_cfg['ssl_intermediate'] = raw_chain
@@ -199,18 +199,18 @@ class ChainFileRes(FileResource):
     @staticmethod
     @transact
     def delete_file(store):
-        prv_fact = PrivateFactory(store)
+        prv_fact = PrivateFactory(store, 1)
         prv_fact.set_val('https_chain', u'')
 
     @staticmethod
     @transact
     def get_file(store):
-        prv_fact = PrivateFactory(store)
+        prv_fact = PrivateFactory(store, 1)
         return prv_fact.get_val('https_chain')
 
     @staticmethod
     def db_serialize(store):
-        c = PrivateFactory(store).get_val('https_chain')
+        c = PrivateFactory(store, 1).get_val('https_chain')
         if len(c) == 0:
             return {'name': 'chain', 'set': False}
 
@@ -229,7 +229,7 @@ class CsrFileRes(FileResource):
     @classmethod
     @transact
     def create_file(store, cls, raw_csr):
-        prv_fact = PrivateFactory(store)
+        prv_fact = PrivateFactory(store, 1)
 
         prv_fact.set_val('https_csr', raw_csr)
 
@@ -238,18 +238,18 @@ class CsrFileRes(FileResource):
     @staticmethod
     @transact
     def delete_file(store):
-        prv_fact = PrivateFactory(store)
+        prv_fact = PrivateFactory(store, 1)
         prv_fact.set_val('https_csr', u'')
 
     @staticmethod
     @transact
     def get_file(store):
-        prv_fact = PrivateFactory(store)
+        prv_fact = PrivateFactory(store, 1)
         return prv_fact.get_val('https_csr')
 
     @staticmethod
     def db_serialize(store):
-        c = PrivateFactory(store).get_val('https_csr')
+        c = PrivateFactory(store, 1).get_val('https_csr')
         if len(c) == 0:
             return {'name': 'csr', 'set': False}
 
@@ -330,7 +330,7 @@ class FileHandler(BaseHandler):
 
 @transact
 def serialize_https_config_summary(store):
-    prv_fact = PrivateFactory(store)
+    prv_fact = PrivateFactory(store, 1)
 
     file_summaries = {}
 
@@ -348,7 +348,7 @@ def serialize_https_config_summary(store):
 
 @transact
 def try_to_enable_https(store):
-    prv_fact = PrivateFactory(store)
+    prv_fact = PrivateFactory(store, 1)
 
     cv = tls.ChainValidator()
     db_cfg = load_tls_dict(store)
@@ -363,7 +363,7 @@ def try_to_enable_https(store):
 
 @transact
 def disable_https(store):
-    prv_fact = PrivateFactory(store)
+    prv_fact = PrivateFactory(store, 1)
     log.debug('Disabling https on the node.')
     prv_fact.set_val('https_enabled', False)
 

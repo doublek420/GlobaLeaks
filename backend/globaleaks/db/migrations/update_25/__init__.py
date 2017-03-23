@@ -3,11 +3,11 @@
 from storm.locals import Int, Bool, Unicode, DateTime, JSON
 
 from globaleaks.db.migrations.update import MigrationBase
-from globaleaks.models import ModelWithID
+from globaleaks.models import ModelWithUID
 from globaleaks.security import sha512
 
 
-class User_v_24(ModelWithID):
+class User_v_24(ModelWithUID):
     __storm_table__ = 'user'
     creation_date = DateTime()
     username = Unicode()

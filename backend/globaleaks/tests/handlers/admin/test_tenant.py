@@ -17,7 +17,7 @@ class TestTenantCollection(helpers.TestHandlerWithPopulatedDB):
         handler = self.request(role='admin')
         yield handler.get()
 
-        self.assertEqual(len(self.responses[0]), 3)
+        self.assertEqual(len(self.responses[0]), 3+1)
 
     @inlineCallbacks
     def test_post_new_tenant(self):

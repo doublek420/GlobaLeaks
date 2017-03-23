@@ -68,7 +68,7 @@ def db_associate_context_receivers(store, context, receivers_ids):
     context.receivers.clear()
 
     for receiver_id in receivers_ids:
-        receiver = models.Receiver.get(store, receiver_id)
+        receiver = store.find(models.Receiver, id=receiver_id).one()
         if not receiver:
             raise errors.ReceiverIdNotFound
         context.receivers.add(receiver)

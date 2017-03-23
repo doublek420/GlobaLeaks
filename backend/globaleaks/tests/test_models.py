@@ -45,7 +45,7 @@ class TestSystemConfigModels(helpers.TestGL):
 
         self.assertEqual(False, config.is_cfg_valid(store))
 
-        node = config.NodeFactory(store)
+        node = config.NodeFactory(store, 1)
         c = node.get_cfg('hostname')
         store.remove(c)
         store.commit()
@@ -53,13 +53,13 @@ class TestSystemConfigModels(helpers.TestGL):
         self.assertEqual(False, node.db_corresponds())
 
         # Delete all of the vars in Private Factory
-        prv = config.PrivateFactory(store)
+        prv = config.PrivateFactory(store, 1)
 
         store.execute('DELETE FROM config WHERE var_group = "private"')
 
         self.assertEqual(False, prv.db_corresponds())
 
-        ntfn = config.NotificationFactory(store)
+        ntfn = config.NotificationFactory(store, 1)
 
         c = config.Config('notification', 'server', 'guarda.giochi.con.occhi')
         c.var_name = u'anextravar'
@@ -73,21 +73,6 @@ class TestSystemConfigModels(helpers.TestGL):
 
 
 class TestConfigL10N(helpers.TestGL):
-    @inlineCallbacks
-    def test_config_l10n_init(self):
-        yield self.run_node_mgr()
-
-    @transact
-    def run_node_mgr(self, store):
-        # Initialize the Node manager
-        node_l10n = NodeL10NFactory(store)
-        num_trans = len(NodeL10NFactory.localized_keys)
-
-        # Make a query with the Node manager
-        ret = node_l10n.retrieve_rows('en')
-
-        self.assertTrue(len(ret) == num_trans)
-
     @inlineCallbacks
     def test_enabled_langs(self):
         yield self.enable_langs()
@@ -321,14 +306,14 @@ class TestModels(helpers.TestGL):
     @inlineCallbacks
     def test_context_receiver_reference_1(self):
         context_id = yield self.create_context_with_receivers()
-        yield self.assert_model_exists(models.Context, context_id)
+        yield self.assert_model_exists(models.Context, id=context_id)
         receivers = yield self.list_receivers_of_context(context_id)
         self.assertEqual(2, len(receivers))
 
     @inlineCallbacks
     def test_context_receiver_reference_2(self):
         receiver_id = yield self.create_receiver_with_contexts()
-        yield self.assert_model_exists(models.Receiver, receiver_id)
+        yield self.assert_model_exists(models.Receiver, id=receiver_id)
         contexts = yield self.list_context_of_receivers(receiver_id)
         self.assertEqual(2, len(contexts))
 
@@ -356,14 +341,14 @@ class TestField(helpers.TestGL):
     @inlineCallbacks
     def test_field(self):
         field1_id = yield self.create_dummy_field()
-        yield self.assert_model_exists(models.Field, field1_id)
+        yield self.assert_model_exists(models.Field, id=field1_id)
 
         field2_id = yield self.create_dummy_field(type='checkbox')
-        yield self.assert_model_exists(models.Field, field2_id)
+        yield self.assert_model_exists(models.Field, id=field2_id)
 
         yield self.field_delete(field1_id)
-        yield self.assert_model_not_exists(models.Field, field1_id)
-        yield self.assert_model_exists(models.Field, field2_id)
+        yield self.assert_model_not_exists(models.Field, id=field1_id)
+        yield self.assert_model_exists(models.Field, id=field2_id)
 
     @inlineCallbacks
     def test_field_group(self):
@@ -383,8 +368,8 @@ class TestField(helpers.TestGL):
             x=1, y=2,
         )
 
-        yield self.assert_model_exists(models.Field, fieldgroup_id)
-        yield self.assert_model_exists(models.Field, field2_id)
+        yield self.assert_model_exists(models.Field, id=fieldgroup_id)
+        yield self.assert_model_exists(models.Field, id=field2_id)
         yield self.add_children(fieldgroup_id, field1_id, field2_id)
 
         fieldgroup_children = yield self.get_children(fieldgroup_id)
@@ -392,6 +377,6 @@ class TestField(helpers.TestGL):
         self.assertIn(field2_id, fieldgroup_children)
 
         yield self.field_delete(fieldgroup_id)
-        yield self.assert_model_not_exists(models.Field, fieldgroup_id)
-        yield self.assert_model_not_exists(models.Field, field1_id)
-        yield self.assert_model_not_exists(models.Field, field2_id)
+        yield self.assert_model_not_exists(models.Field, id=fieldgroup_id)
+        yield self.assert_model_not_exists(models.Field, id=field1_id)
+        yield self.assert_model_not_exists(models.Field, id=field2_id)

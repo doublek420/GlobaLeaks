@@ -5,11 +5,11 @@ import os
 from storm.locals import Int, Bool, Unicode, DateTime, JSON
 
 from globaleaks.db.migrations.update import MigrationBase
-from globaleaks.models import ModelWithID
+from globaleaks.models import ModelWithUID
 from globaleaks.settings import GLSettings
 
 
-class Node_v_30(ModelWithID):
+class Node_v_30(ModelWithUID):
     __storm_table__ = 'node'
     version = Unicode()
     version_db = Unicode()
@@ -76,7 +76,7 @@ class Node_v_30(ModelWithID):
     threshold_free_disk_percentage_low = Int()
 
 
-class User_v_30(ModelWithID):
+class User_v_30(ModelWithUID):
     __storm_table__ = 'user'
     creation_date = DateTime()
     username = Unicode()
@@ -100,7 +100,7 @@ class User_v_30(ModelWithID):
     pgp_key_status = Unicode()
 
 
-class Context_v_30(ModelWithID):
+class Context_v_30(ModelWithUID):
     __storm_table__ = 'context'
     show_small_cards = Bool()
     show_context = Bool()
@@ -123,7 +123,7 @@ class Context_v_30(ModelWithID):
     questionnaire_id = Unicode()
 
 
-class ReceiverTip_v_30(ModelWithID):
+class ReceiverTip_v_30(ModelWithUID):
     __storm_table__ = 'receivertip'
     internaltip_id = Unicode()
     receiver_id = Unicode()
@@ -134,7 +134,7 @@ class ReceiverTip_v_30(ModelWithID):
     new = Int()
 
 
-class Notification_v_30(ModelWithID):
+class Notification_v_30(ModelWithUID):
     __storm_table__ = 'notification'
     server = Unicode()
     port = Int()

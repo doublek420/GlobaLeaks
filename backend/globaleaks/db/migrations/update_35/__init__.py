@@ -2,12 +2,15 @@
 from storm.locals import Int, Bool, Unicode, DateTime, JSON
 
 from globaleaks.db.migrations.update import MigrationBase
+from globaleaks.db.migrations.update_37 import Config_v_36
 from globaleaks.models import *
 from globaleaks.models.config import NodeFactory
 from globaleaks.models.l10n import EnabledLanguage
 
+NodeFactory.model_class = Config_v_36
 
-class Context_v_34(ModelWithID):
+
+class Context_v_34(ModelWithUID):
     __storm_table__ = 'context'
     show_small_receiver_cards = Bool(default=False)
     show_context = Bool(default=True)
@@ -33,14 +36,14 @@ class Context_v_34(ModelWithID):
     localized_keys = ['name', 'description', 'recipients_clarification', 'status_page_message']
 
 
-class WhistleblowerTip_v_34(ModelWithID):
+class WhistleblowerTip_v_34(ModelWithUID):
     __storm_table__ = 'whistleblowertip'
     internaltip_id = Unicode()
     receipt_hash = Unicode()
     access_counter = Int(default=0)
 
 
-class InternalTip_v_34(ModelWithID):
+class InternalTip_v_34(ModelWithUID):
     __storm_table__ = 'internaltip'
     creation_date = DateTime(default_factory=datetime_now)
     update_date = DateTime(default_factory=datetime_now)
@@ -90,7 +93,10 @@ class MigrationScript(MigrationBase):
             self.store_new.add(new_obj)
 
     def migrate_User(self):
-        default_language = NodeFactory(self.store_old).get_val('default_language')
+        nf = NodeFactory(self.store_old, 1)
+        nf.model_class = Config_v_36
+
+        default_language = nf.get_val('default_language')
         enabled_languages = EnabledLanguage.list(self.store_old)
 
         old_objs = self.store_old.find(self.model_from['User'])
@@ -130,6 +136,7 @@ class MigrationScript(MigrationBase):
             self.store_new.add(new_obj)
 
     def epilogue(self):
-        nf = NodeFactory(self.store_new)
+        nf = NodeFactory(self.store_new, 1)
+        nf.model_class = Config_v_36
         self.trim_value_to_range(nf, 'wbtip_timetolive')
         self.store_new.commit()

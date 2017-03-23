@@ -18,9 +18,8 @@ from globaleaks.utils.utility import log, datetime_null
 
 
 @transact
-def wizard(store, tid, request, language):
-    # TODO(tid_me) this whole function
-    node = NodeFactory(store)
+def wizard(store, request, language):
+    node = NodeFactory(store, request['tid'])
 
     if node.get_val('wizard_done'):
         # TODO report as anomaly
@@ -87,8 +86,10 @@ class Wizard(BaseHandler):
         request = self.validate_message(self.request.body,
                                         requests.WizardDesc)
 
+        request['tid'] = self.request.current_tenant_id
+
         # Wizard will raise exceptions if there are any errors with the request
-        yield wizard(self.request.current_tenant_id, request, self.request.language)
+        yield wizard(request, self.request.language)
         # cache must be updated in order to set wizard_done = True
         yield serialize_node(self.request.language)
         GLApiCache.invalidate(self.request.current_tenant_id)

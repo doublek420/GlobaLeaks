@@ -22,7 +22,7 @@ class TestL10NHandler(helpers.TestHandler):
 
         self.assertNotIn('12345', self.responses[0])
 
-        yield admin_l10n.update_custom_texts(u'en', custom_texts)
+        yield admin_l10n.update_custom_texts(1, u'en', custom_texts)
 
         GLApiCache.invalidate('l10n')
 

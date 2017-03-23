@@ -5,11 +5,11 @@ import shutil
 from storm.locals import Int, Bool, Unicode, DateTime, JSON
 
 from globaleaks.db.migrations.update import MigrationBase
-from globaleaks.models import ModelWithID
+from globaleaks.models import ModelWithUID
 from globaleaks.settings import GLSettings
 
 
-class Node_v_26(ModelWithID):
+class Node_v_26(ModelWithUID):
     __storm_table__ = 'node'
     version = Unicode()
     version_db = Unicode()
@@ -73,7 +73,7 @@ class Node_v_26(ModelWithID):
     threshold_free_disk_percentage_low = Int()
 
 
-class Context_v_26(ModelWithID):
+class Context_v_26(ModelWithUID):
     __storm_table__ = 'context'
     show_small_cards = Bool()
     show_context = Bool()
@@ -95,7 +95,7 @@ class Context_v_26(ModelWithID):
     presentation_order = Int()
 
 
-class Notification_v_26(ModelWithID):
+class Notification_v_26(ModelWithUID):
     __storm_table__ = 'notification'
     server = Unicode()
     port = Int()

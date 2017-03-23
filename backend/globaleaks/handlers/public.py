@@ -27,7 +27,7 @@ def db_serialize_node(store, language):
     # Contexts and Receivers relationship
     configured = store.find(models.ReceiverContext).count() > 0
 
-    ro_node = NodeFactory(store).public_export()
+    ro_node = NodeFactory(store, 1).public_export()
 
     misc_dict = {
         'languages_enabled': l10n.EnabledLanguage.list(store),

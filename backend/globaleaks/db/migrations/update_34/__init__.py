@@ -8,13 +8,12 @@ from globaleaks.db.migrations.update import MigrationBase
 from globaleaks.handlers.admin import files
 from globaleaks.models import *
 from globaleaks.models import l10n, properties
-from globaleaks.models.config import Config
-from globaleaks.models.l10n import ConfigL10N
 from globaleaks.settings import GLSettings
 
 from globaleaks.db.migrations.update_34.config import GLConfig_v_35
+from globaleaks.db.migrations.update_37 import Config_v_36
 
-class Node_v_33(ModelWithID):
+class Node_v_33(ModelWithUID):
     __storm_table__ = 'node'
 
     version = Unicode()
@@ -112,7 +111,7 @@ class Node_v_33(ModelWithID):
     ]
 
 
-class Notification_v_33(ModelWithID):
+class Notification_v_33(ModelWithUID):
     __storm_table__ = 'notification'
 
     server = Unicode(validator=shorttext_v, default=u'demo.globaleaks.org')
@@ -210,6 +209,8 @@ class Notification_v_33(ModelWithID):
 
 class MigrationScript(MigrationBase):
     def epilogue(self):
+        Config = self.model_to['Config']
+
         old_node = self.store_old.find(self.model_from['Node']).one()
         old_notif = self.store_old.find(self.model_from['Notification']).one()
 
@@ -283,7 +284,7 @@ class MigrationScript(MigrationBase):
                 else: # val is None and val_def == ""
                     val_f = ""
 
-                s = ConfigL10N(lang, old_obj.__storm_table__, name, val_f)
+                s = self.model_to['ConfigL10N'](lang, old_obj.__storm_table__, name, val_f)
                 # Set the cfg item to customized if the final assigned val does
                 # not equal the current default template value
                 s.customized = val_f != val_def

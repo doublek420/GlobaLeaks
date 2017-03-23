@@ -56,7 +56,7 @@ class ProcessSupervisor(object):
 
     @defer.inlineCallbacks
     def db_maybe_launch_https_workers(self, store):
-        privFact = PrivateFactory(store)
+        privFact = PrivateFactory(store, 1)
 
         on = privFact.get_val('https_enabled')
         if not on:

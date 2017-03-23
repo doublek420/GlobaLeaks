@@ -9,10 +9,10 @@
 from storm.locals import Int, Bool, Unicode, DateTime, JSON
 
 from globaleaks.db.migrations.update import MigrationBase
-from globaleaks.models import ModelWithID
+from globaleaks.models import ModelWithUID
 
 
-class Node_v_18(ModelWithID):
+class Node_v_18(ModelWithUID):
     __storm_table__ = 'node'
     name = Unicode()
     public_site = Unicode()

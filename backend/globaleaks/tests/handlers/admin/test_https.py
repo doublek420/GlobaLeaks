@@ -16,7 +16,7 @@ from globaleaks.tests.utils import test_tls
 
 @transact
 def set_dh_params(store, dh_params):
-    PrivateFactory(store).set_val('https_dh_params', dh_params)
+    PrivateFactory(store, 1).set_val('https_dh_params', dh_params)
 
 
 class TestFileHandler(helpers.TestHandler):
@@ -40,7 +40,7 @@ class TestFileHandler(helpers.TestHandler):
 
     @transact
     def set_enabled(self, store):
-        PrivateFactory(store).set_val('https_enabled', True)
+        PrivateFactory(store, 1).set_val('https_enabled', True)
         GLSettings.memory_copy.private.https_enabled = True
 
     @inlineCallbacks

@@ -174,7 +174,7 @@ def create_field(store, field_dict, language, request_type=None):
 
 
 def db_update_field(store, field_id, field_dict, language):
-    field = models.Field.get(store, field_id)
+    field = store.find(models.Field, id=field_id).one()
     if not field:
         raise errors.FieldIdNotFound
 

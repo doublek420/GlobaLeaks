@@ -74,7 +74,7 @@ def db_create_receiver(store, request, language):
 
     contexts = request.get('contexts', [])
     for context_id in contexts:
-        context = models.Context.get(store, context_id)
+        context = store.find(models.Context, id=context_id).one()
         if not context:
             raise errors.ContextIdNotFound
         context.receivers.add(receiver)
@@ -128,7 +128,7 @@ def db_admin_update_user(store, user_id, request, language):
     Updates the specified user.
     raises: globaleaks.errors.UserIdNotFound` if the user does not exist.
     """
-    user = models.User.get(store, user_id)
+    user = store.find(models.User, id=user_id).one()
     if not user:
         raise errors.UserIdNotFound
 
@@ -162,8 +162,7 @@ def db_get_user(store, user_id):
     Returns:
         (dict) the user
     """
-    user = models.User.get(store, user_id)
-
+    user = store.find(models.User, id=user_id).one()
     if not user:
         raise errors.UserIdNotFound
 

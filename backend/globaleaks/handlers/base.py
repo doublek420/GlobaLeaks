@@ -177,19 +177,6 @@ class BaseHandler(RequestHandler):
     handler_exec_time_threshold = HANDLER_EXEC_TIME_THRESHOLD
     filehandler = False
 
-    def __init__(self, application, request, **kwargs):
-        RequestHandler.__init__(self, application, request, **kwargs)
-
-        self.name = type(self).__name__
-
-        self.handler_time_analysis_begin()
-        self.handler_request_logging_begin()
-
-        self.req_id = GLSettings.requests_counter
-        GLSettings.requests_counter += 1
-
-        self.request.start_time = datetime_now()
-
     def parse_accept_language_header(self):
         if "Accept-Language" in self.request.headers:
             languages = self.request.headers["Accept-Language"].split(",")
@@ -473,6 +460,16 @@ class BaseHandler(RequestHandler):
         pass
 
     def prepare(self):
+        self.name = type(self).__name__
+
+        self.handler_time_analysis_begin()
+        self.handler_request_logging_begin()
+
+        self.req_id = GLSettings.requests_counter
+        GLSettings.requests_counter += 1
+
+        self.request.start_time = datetime_now()
+
         # Map a hostname to the tenant ID for the request
         host_hdr = self.request.headers.get('Host')
         # TODO(tid_me) study of tor redirect and https redirect below
