@@ -35,6 +35,7 @@ def update_custom_texts(store, tid, lang, texts):
     if custom_texts is None:
         custom_texts = CustomTexts()
         custom_texts.lang = lang
+        custom_texts.tid = tid
         store.add(custom_texts)
 
     custom_texts.texts = texts

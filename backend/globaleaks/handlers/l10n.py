@@ -32,7 +32,7 @@ def get_l10n(store, lang):
     # TODO(tid_me) requires changes to GLApiCache
     fake_tid = GLSettings.memory_copy.first_tenant_id
     custom_texts = store.find(models.CustomTexts, And(models.CustomTexts.lang == unicode(lang),
-                                                      models.CustomTexts.tid == tid)).one()
+                                                      models.CustomTexts.tid == fake_tid)).one()
 
     custom_texts = custom_texts.texts if custom_texts is not None else {}
 

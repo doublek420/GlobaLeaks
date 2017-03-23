@@ -701,6 +701,7 @@ class CustomTexts(Model):
     """
     Class used to implement custom texts
     """
+    tid = Int()
     lang = Unicode(primary=True, validator=shorttext_v)
     texts = JSON()
 
