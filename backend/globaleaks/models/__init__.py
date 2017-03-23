@@ -677,7 +677,7 @@ class Counter(Model):
     int_keys = ['number']
 
 
-class ShortURL(ModelWithID):
+class ShortURL(Model):
     """
     Class used to implement url shorteners
     """

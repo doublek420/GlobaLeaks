@@ -14,33 +14,34 @@ from globaleaks.rest import requests, errors
 
 def serialize_shorturl(shorturl):
     return {
-        'id': shorturl.id,
         'shorturl': shorturl.shorturl,
         'longurl': shorturl.longurl
     }
 
 
 @transact
-def get_shorturl_list(store):
-    shorturls = store.find(models.ShortURL)
+def get_shorturl_list(store, tid):
+    shorturls = store.find(models.ShortURL,
+                           models.ShortURL.tid == tid)
     return [serialize_shorturl(shorturl) for shorturl in shorturls]
 
 
 @transact
-def create_shorturl(store, request):
+def create_shorturl(store, tid, request):
     shorturl = models.ShortURL(request)
+    shorturl.tid = tid
     store.add(shorturl)
     return serialize_shorturl(shorturl)
 
 
 @transact
-def delete_shorturl(store, shorturl_id):
-    shorturl = store.find(models.ShortURL, models.ShortURL.id == shorturl_id).one()
+def delete_shorturl(store, tid):
+    shorturl = store.find(models.ShortURL,
+                          models.ShortURL.tid == tid).one()
     if not shorturl:
         raise errors.ShortURLIdNotFound
 
     store.remove(shorturl)
-
 
 
 class ShortURLCollection(BaseHandler):
@@ -51,7 +52,7 @@ class ShortURLCollection(BaseHandler):
         """
         Return the list of registered short urls
         """
-        response = yield get_shorturl_list()
+        response = yield get_shorturl_list(self.request.current_tenant_id)
 
         self.write(response)
 
@@ -64,7 +65,7 @@ class ShortURLCollection(BaseHandler):
         """
         request = self.validate_message(self.request.body, requests.AdminShortURLDesc)
 
-        response = yield create_shorturl(request)
+        response = yield create_shorturl(self.request.current_tenant_id, request)
 
         self.set_status(201) # Created
         self.write(response)
@@ -78,4 +79,4 @@ class ShortURLInstance(BaseHandler):
         """
         Delete the specified shorturl.
         """
-        yield delete_shorturl(shorturl_id)
+        yield delete_shorturl(self.request.current_tenant_id, shorturl_id)

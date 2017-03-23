@@ -6,8 +6,9 @@ from globaleaks.orm import transact
 
 
 @transact
-def translate_shorturl(store, shorturl):
-    shorturl = store.find(models.ShortURL, models.ShortURL.shorturl == shorturl).one()
+def translate_shorturl(store, tid, shorturl):
+    shorturl = store.find(models.ShortURL, And(models.ShortURL.shorturl == shorturl,
+                                               models.ShortURL.tid == tid)).one()
     if not shorturl:
         return '/'
 
@@ -24,5 +25,5 @@ class ShortUrlInstance(BaseHandler):
     @BaseHandler.unauthenticated
     @inlineCallbacks
     def get(self, shorturl):
-        longurl = yield translate_shorturl(shorturl)
+        longurl = yield translate_shorturl(self.requests.current_tenant_id, shorturl)
         self.redirect(longurl)

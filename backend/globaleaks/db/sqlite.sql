@@ -410,13 +410,12 @@ CREATE TABLE counter (
 );
 
 CREATE TABLE shorturl (
-    id TEXT NOT NULL,
     tid INTEGER NOT NULL,
     shorturl TEXT NOT NULL,
     longurl TEXT NOT NULL,
-    UNIQUE (shorturl),
+    UNIQUE (tid, shorturl),
     FOREIGN KEY (tid) REFERENCES tenant(id) ON DELETE CASCADE,
-    PRIMARY KEY (tid, id)
+    PRIMARY KEY (tid, shorturl)
 );
 
 CREATE TABLE file (
