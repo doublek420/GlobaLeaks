@@ -6,6 +6,7 @@
 import json
 import os
 
+from storm.expr import And
 from twisted.internet.defer import inlineCallbacks
 
 from globaleaks import models
@@ -28,7 +29,11 @@ def get_l10n(store, lang):
     with open(path, 'rb') as f:
         texts = json.loads(f.read())
 
-    custom_texts = store.find(models.CustomTexts, models.CustomTexts.lang == unicode(lang)).one()
+    # TODO(tid_me) requires changes to GLApiCache
+    fake_tid = GLSettings.memory_copy.first_tenant_id
+    custom_texts = store.find(models.CustomTexts, And(models.CustomTexts.lang == unicode(lang),
+                                                      models.CustomTexts.tid == tid)).one()
+
     custom_texts = custom_texts.texts if custom_texts is not None else {}
 
     texts.update(custom_texts)

@@ -426,8 +426,10 @@ CREATE TABLE file (
 );
 
 CREATE TABLE customtexts (
+    tid TEXT NOT NULL,
     lang TEXT NOT NULL,
     texts BLOB NOT NULL,
+    FOREIGN KEY (tid) REFERENCES tenant(id) ON DELETE CASCADE,
     PRIMARY KEY (lang)
 );
 
