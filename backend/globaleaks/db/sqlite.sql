@@ -1,11 +1,6 @@
 PRAGMA foreign_keys = ON;
 PRAGMA auto_vacuum = FULL;
 
-CREATE TABLE tenant (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    label TEXT NOT NULL
-);
-
 CREATE TABLE enabledlanguage (
     name TEXT NOT NULL,
     PRIMARY KEY (name)
@@ -411,11 +406,9 @@ CREATE TABLE counter (
 
 CREATE TABLE shorturl (
     id TEXT NOT NULL,
-    tid INTEGER NOT NULL,
     shorturl TEXT NOT NULL,
     longurl TEXT NOT NULL,
-    UNIQUE (tid, shorturl),
-    FOREIGN KEY (tid) REFERENCES tenant(id) ON DELETE CASCADE,
+    UNIQUE (shorturl),
     PRIMARY KEY (id)
 );
 
@@ -426,10 +419,8 @@ CREATE TABLE file (
 );
 
 CREATE TABLE customtexts (
-    tid TEXT NOT NULL,
     lang TEXT NOT NULL,
     texts BLOB NOT NULL,
-    FOREIGN KEY (tid) REFERENCES tenant(id) ON DELETE CASCADE,
     PRIMARY KEY (lang)
 );
 
