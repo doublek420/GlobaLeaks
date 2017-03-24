@@ -8,6 +8,7 @@ from twisted.internet.defer import inlineCallbacks
 
 from globaleaks import models
 from globaleaks.handlers.base import BaseHandler
+from globaleaks.models.tenant import db_delete_tenant, db_create_tenant, db_get_tenant_list, Tenant
 from globaleaks.orm import transact
 from globaleaks.rest import requests
 from globaleaks.db import db_refresh_memory_variables
@@ -20,20 +21,14 @@ def serialize_tenant(tenant):
     }
 
 
-def db_get_tenant_list(store):
-    tenants = store.find(models.Tenant)
-    return [serialize_tenant(tenant) for tenant in tenants]
-
-
 @transact
 def get_tenant_list(store):
-    return db_get_tenant_list(store)
+    return [serialize_tenant(tenant) for tenant in db_get_tenant_list(store)]
 
 
 @transact
 def create_tenant(store, request):
-    tenant = models.Tenant(request)
-    store.add(tenant)
+    tenant = db_create_tenant(store, request)
 
     db_refresh_memory_variables(store)
     return serialize_tenant(tenant)
@@ -41,10 +36,7 @@ def create_tenant(store, request):
 
 @transact
 def delete_tenant(store, tenant_id):
-    tenant = store.find(models.Tenant, models.Tenant.id == tenant_id).one()
-    if tenant:
-        store.remove(tenant)
-
+    db_delete_tenant(store, tenant_id)
     db_refresh_memory_variables(store)
 
 
@@ -71,7 +63,6 @@ class TenantCollection(BaseHandler):
 
         response = yield create_tenant(request)
 
-
         self.set_status(201) # Created
         self.write(response)
 
@@ -84,4 +75,7 @@ class TenantInstance(BaseHandler):
         """
         Delete the specified tenant.
         """
+        tenant_id = int(tenant_id)
+        if tenant_id == self.request.current_tenant_id:
+            raise Exception('System will not delete the current tenant.')
         yield delete_tenant(tenant_id)

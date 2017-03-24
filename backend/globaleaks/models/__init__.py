@@ -142,16 +142,6 @@ class ModelWithID(Model):
         return store.find(cls, cls.id == obj_id).one()
 
 
-class Tenant(Model):
-    """
-    Class used to implement multi tenancy.
-    """
-    id = Int(primary=True) # TODO Note may become text again
-    label = Unicode(validator=shorttext_v)
-
-    unicode_keys = ['label']
-
-
 class User(ModelWithID):
     """
     This model keeps track of globaleaks users.

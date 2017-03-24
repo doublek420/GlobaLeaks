@@ -12,7 +12,7 @@ from twisted.internet.defer import inlineCallbacks
 from globaleaks import models, security, DATABASE_VERSION, FIRST_DATABASE_VERSION_SUPPORTED
 from globaleaks.db.appdata import db_update_appdata, db_fix_fields_attrs
 from globaleaks.handlers.admin import files
-from globaleaks.models import config, l10n, User, Tenant
+from globaleaks.models import config, l10n, User, tenant
 from globaleaks.models.config import NodeFactory, NotificationFactory, PrivateFactory
 from globaleaks.models.l10n import EnabledLanguage
 from globaleaks.orm import transact, transact_sync
@@ -44,26 +44,34 @@ def db_create_tables(store):
 @transact_sync
 def init_db(store, use_single_lang=False):
     db_create_tables(store)
-    appdata_dict = db_update_appdata(store)
+
+    root_tenant = {'label': 'localhost:8082'}
+    print('running')
+    tenant.db_create_tenant(store, root_tenant, use_single_lang)
 
     log.debug("Performing database initialization...")
-    first_tenant = Tenant()
-    first_tenant.label = "localhost:8082"
-    store.add(first_tenant)
 
+    # TODO(tid_me)
+    appdata_dict = db_update_appdata(store)
+
+    # TODO(tid_me)
     config.system_cfg_init(store)
 
     if not use_single_lang:
+        # TODO(tid_me)
         EnabledLanguage.add_all_supported_langs(store, appdata_dict)
     else:
+        # TODO(tid_me)
         EnabledLanguage.add_new_lang(store, u'en', appdata_dict)
 
     with open(os.path.join(GLSettings.client_path, 'data/logo.png'), 'r') as logo_file:
         data = logo_file.read()
+        # TODO(tid_me)
         files.db_add_file(store, data, u'logo')
 
     with open(os.path.join(GLSettings.client_path, 'data/favicon.ico'), 'r') as favicon_file:
         data = favicon_file.read()
+        # TODO(tid_me)
         files.db_add_file(store, data, u'favicon')
 
 
@@ -176,7 +184,7 @@ def db_refresh_memory_variables(store):
     if GLSettings.developer_name:
         GLSettings.memory_copy.notif.source_name = GLSettings.developer_name
 
-    tenants = store.find(Tenant) # TODO(tid_me) Must be removed
+    tenants = store.find(tenant.Tenant) # TODO(tid_me) Must be removed
     GLSettings.memory_copy.tenant_map = {t.label: t.id for t in tenants}
     GLSettings.memory_copy.first_tenant_id = GLSettings.memory_copy.tenant_map['localhost:8082']
 

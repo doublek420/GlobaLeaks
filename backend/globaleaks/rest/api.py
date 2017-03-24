@@ -118,7 +118,7 @@ spec = [
     (r'/admin/shorturls', admin_shorturl.ShortURLCollection),
     (r'/admin/shorturls/' + uuid_regexp, admin_shorturl.ShortURLInstance),
     (r'/admin/tenants', admin_tenant.TenantCollection),
-    (r'/admin/tenants/' + uuid_regexp, admin_tenant.TenantInstance),
+    (r'/admin/tenants/' + '([0-9]{0,20})', admin_tenant.TenantInstance),
     (r'/admin/stats/(\d+)', admin_statistics.StatsCollection),
     (r'/admin/activities/(summary|details)', admin_statistics.RecentEventsCollection),
     (r'/admin/anomalies', admin_statistics.AnomalyCollection),
