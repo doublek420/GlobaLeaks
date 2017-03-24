@@ -22,17 +22,15 @@ def langfile_path(lang):
 
 
 @transact
-def get_l10n(store, lang):
+def get_l10n(store, tid, lang):
     path = langfile_path(lang)
     directory_traversal_check(GLSettings.client_path, path)
 
     with open(path, 'rb') as f:
         texts = json.loads(f.read())
 
-    # TODO(tid_me) requires changes to GLApiCache
-    fake_tid = GLSettings.memory_copy.first_tenant_id
     custom_texts = store.find(models.CustomTexts, And(models.CustomTexts.lang == unicode(lang),
-                                                      models.CustomTexts.tid == fake_tid)).one()
+                                                      models.CustomTexts.tid == tid)).one()
 
     custom_texts = custom_texts.texts if custom_texts is not None else {}
 
@@ -56,6 +54,7 @@ class L10NHandler(BaseHandler):
                                     self.request.current_tenant_id,
                                     self.request.language,
                                     get_l10n,
+                                    self.request.current_tenant_id,
                                     self.request.language)
 
         self.write(l10n)

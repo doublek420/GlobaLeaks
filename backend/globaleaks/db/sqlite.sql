@@ -426,11 +426,11 @@ CREATE TABLE file (
 );
 
 CREATE TABLE customtexts (
-    tid TEXT NOT NULL,
+    tid INTEGER NOT NULL,
     lang TEXT NOT NULL,
     texts BLOB NOT NULL,
     FOREIGN KEY (tid) REFERENCES tenant(id) ON DELETE CASCADE,
-    PRIMARY KEY (lang)
+    PRIMARY KEY (tid, lang)
 );
 
 CREATE INDEX fieldattr__field_id_index ON fieldattr(field_id);

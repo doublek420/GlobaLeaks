@@ -14,14 +14,13 @@ class Tenant(Model):
 
     unicode_keys = ['label']
 
-
 def db_create_tenant(store, desc, use_single_lang=False):
     # NOTE Invalidates memory_var cache but does not refresh it
     tenant = Tenant(desc)
     store.add(tenant)
     store.commit()
 
-    log.debug("Creating tenant:%d" % tenant.id)
+    log.debug("Creating %s" % tenant)
 
     # Note an example of a tenant resource
     sh = ShortURL({'shorturl':'/s/exampleres', 'longurl':'/exampleres'})
