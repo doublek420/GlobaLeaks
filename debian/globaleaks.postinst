@@ -42,25 +42,7 @@ if ! id -u globaleaks >/dev/null 2>&1; then
   # Create globaleaks and tor hidden service directories with proper permissions.
   gl-fix-permissions
 
-  # Add AppArmor rules for allowing tor to access to directory /var/globaleaks/torhs/
-  if ! $(grep -q -i globaleaks /etc/apparmor.d/local/system_tor); then
-    echo "/var/globaleaks/torhs/ w," >> /etc/apparmor.d/local/system_tor
-    echo "/var/globaleaks/torhs/** rwk," >> /etc/apparmor.d/local/system_tor
-
-    # restart apparmor service in order to load tor rules
-    service apparmor restart
-  fi
-
-  # Add Systemd rules for allowing Tor to access to directory /var/globaleaks/torhs/
-  if [ -d '/etc/systemd/system' ]; then
-    mkdir -p /etc/systemd/system/tor\@default.service.d
-    cat <<EOF >> /etc/systemd/system/tor\@default.service.d/directory.conf
-[Service]
-ReadWriteDirectories=-/var/globaleaks/torhs/
-EOF
-
-    systemctl daemon-reload
-  fi
+  # TODO add hostname file to globaleaks/torhs/
 
   if [ -d '/etc/tor/' ]; then
     # Add Tor HS configuration to file /etc/tor/torrc
@@ -70,8 +52,6 @@ VirtualAddrNetwork 10.23.47.0/10
 AutomapHostsOnResolve 1
 TransPort 127.0.0.1:9040
 DNSPort 127.0.0.1:5353
-HiddenServiceDir /var/globaleaks/torhs/
-HiddenServicePort 80 127.0.0.1:8082
 # END GlobaLeaks Configuration - DO NOT EDIT!
 EOF
 
