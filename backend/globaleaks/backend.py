@@ -14,8 +14,8 @@ from twisted.application import internet, service
 from twisted.internet import reactor, defer
 from twisted.python import log as txlog, logfile as txlogfile
 
-from globaleaks.db import init_db, sync_clean_untracked_files, \
-    sync_refresh_memory_variables
+from globaleaks.db import init_db, sync_clean_untracked_files
+from globaleaks.memory import sync_refresh_memory_variables
 from globaleaks.rest import api
 from globaleaks.settings import GLSettings
 from globaleaks.utils.utility import log, GLLogObserver

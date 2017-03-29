@@ -7,8 +7,8 @@
 
 from twisted.internet.defer import inlineCallbacks
 
-from globaleaks import models, LANGUAGES_SUPPORTED
-from globaleaks.handlers.admin.files import db_get_file
+from globaleaks import models, LANGUAGES_SUPPORTED, LANGUAGES_SUPPORTED_CODES
+from globaleaks.handlers.admin.files import db_get_file_by_key
 from globaleaks.handlers.base import BaseHandler
 from globaleaks.models import l10n
 from globaleaks.models.config import NodeFactory
@@ -20,37 +20,42 @@ from globaleaks.utils.sets import disjoint_union
 from globaleaks.utils.structures import get_localized_values
 
 
-def db_serialize_node(store, language):
+def db_serialize_node(store, tid, language):
     """
     Serialize node info.
     """
     # Contexts and Receivers relationship
     configured = store.find(models.ReceiverContext).count() > 0
 
-    ro_node = NodeFactory(store, 1).public_export()
+    node_ro = NodeFactory(store, tid).public_export()
+
+    if node_ro['wizard_done']:
+        languages_enabled = l10n.EnabledLanguage.list(store, tid)
+    else:
+        languages_enabled = LANGUAGES_SUPPORTED_CODES
 
     misc_dict = {
-        'languages_enabled': l10n.EnabledLanguage.list(store),
+        'languages_enabled': languages_enabled,
         'languages_supported': LANGUAGES_SUPPORTED,
         'configured': configured,
         'accept_submissions': GLSettings.accept_submissions,
-        'logo': db_get_file(store, u'logo'),
-        'favicon': db_get_file(store, u'favicon'),
-        'css': db_get_file(store, u'css'),
-        'homepage': db_get_file(store, u'homepage'),
-        'script': db_get_file(store, u'script')
+        'logo': db_get_file_by_key(store, tid, u'logo'),
+        'favicon': db_get_file_by_key(store, tid, u'favicon'),
+        'css': db_get_file_by_key(store, tid, u'css'),
+        'homepage': db_get_file_by_key(store, tid, u'homepage'),
+        'script': db_get_file_by_key(store, tid, u'script')
     }
 
-    l10n_dict = NodeL10NFactory(store).localized_dict(language)
+    l10n_dict = NodeL10NFactory(store, tid).localized_dict(language)
 
-    ret = disjoint_union(ro_node, l10n_dict, misc_dict)
+    ret = disjoint_union(node_ro, l10n_dict, misc_dict)
 
     return ret
 
 
 @transact
-def serialize_node(store, language):
-    return db_serialize_node(store, language)
+def serialize_node(store, tid, language):
+    return db_serialize_node(store, tid, language)
 
 
 def serialize_context(store, context, language):
@@ -273,9 +278,9 @@ def db_get_public_receiver_list(store, language):
 
 
 @transact
-def get_public_resources(store, language):
+def get_public_resources(store, tid, language):
     return {
-        'node': db_serialize_node(store, language),
+        'node': db_serialize_node(store, tid, language),
         'contexts': db_get_public_context_list(store, language),
         'receivers': db_get_public_receiver_list(store, language)
     }
@@ -293,5 +298,6 @@ class PublicResource(BaseHandler):
                                    self.request.current_tenant_id,
                                    self.request.language,
                                    get_public_resources,
+                                   self.request.current_tenant_id,
                                    self.request.language)
         self.write(ret)

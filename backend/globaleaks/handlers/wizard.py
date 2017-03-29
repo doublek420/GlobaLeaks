@@ -1,10 +1,11 @@
 # -*- coding: UTF-8
 #
 # wizard
-
+from storm.expr import And
 from twisted.internet.defer import inlineCallbacks
 
 from globaleaks.handlers.admin.context import db_create_context
+from globaleaks.handlers.admin.node import  set_enabled_languages
 from globaleaks.handlers.admin.receiver import db_create_receiver
 from globaleaks.handlers.admin.user import db_create_admin_user
 from globaleaks.handlers.base import BaseHandler
@@ -18,8 +19,8 @@ from globaleaks.utils.utility import log, datetime_null
 
 
 @transact
-def wizard(store, request, language):
-    node = NodeFactory(store, request['tid'])
+def wizard(store, tid, request, language):
+    node = NodeFactory(store, tid)
 
     if node.get_val('wizard_done'):
         # TODO report as anomaly
@@ -34,7 +35,7 @@ def wizard(store, request, language):
         node.set_val('default_language', language)
         node.set_val('wizard_done', True)
 
-        node_l10n = NodeL10NFactory(store)
+        node_l10n = NodeL10NFactory(store, tid)
 
         node_l10n.set_val('description', language, nn)
         node_l10n.set_val('header_title_homepage', language, nn)
@@ -42,10 +43,8 @@ def wizard(store, request, language):
 
         context = db_create_context(store, request['context'], language)
 
-        langs_to_drop = EnabledLanguage.list(store)
-        langs_to_drop.remove(language)
-        if len(langs_to_drop):
-            EnabledLanguage.remove_old_langs(store, langs_to_drop)
+        if language != u'en':
+            set_enabled_languages(store, tid, language, [language])
 
         request['receiver']['contexts'] = [context.id]
         request['receiver']['language'] = language
@@ -86,12 +85,10 @@ class Wizard(BaseHandler):
         request = self.validate_message(self.request.body,
                                         requests.WizardDesc)
 
-        request['tid'] = self.request.current_tenant_id
-
         # Wizard will raise exceptions if there are any errors with the request
-        yield wizard(request, self.request.language)
+        yield wizard(self.request.current_tenant_id, request, self.request.language)
         # cache must be updated in order to set wizard_done = True
-        yield serialize_node(self.request.language)
+        yield serialize_node(self.request.current_tenant_id, self.request.language)
         GLApiCache.invalidate(self.request.current_tenant_id)
 
         self.set_status(201)  # Created

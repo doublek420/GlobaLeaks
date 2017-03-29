@@ -21,7 +21,9 @@ def db_forge_obj(store, mock_class, mock_fields):
     obj = mock_class()
     for key, val in mock_fields.iteritems():
         setattr(obj, key, val)
+
     store.add(obj)
+
     return obj
 
 
@@ -100,6 +102,16 @@ class Model(Storm):
                 value = values[k]
                 setattr(self, k, value)
 
+    @classmethod
+    def get(cls, store, key):
+        return store.get(cls, key)
+
+    @classmethod
+    def delete(cls, store, key):
+        obj = store.get(cls, key)
+        if obj is not None:
+            store.remove(obj)
+
     def __str__(self):
         # pylint: disable=no-member
         values = ['{}={}'.format(attr, getattr(self, attr)) for attr in self._public_attrs]
@@ -138,22 +150,14 @@ class ModelWithID(Model):
 
     id = Int(primary=True)
 
-    @classmethod
-    def get(cls, store, obj_id):
-        return store.find(cls, id = obj_id).one()
 
-
-class ModelWithUID(Model):
+class ModelWithUID(ModelWithID):
     """
     Base class for models requiring an ID
     """
     __storm_table__ = None
 
     id = Unicode(primary=True, default_factory=uuid4)
-
-    @classmethod
-    def get(cls, store, obj_id):
-        return store.find(cls, id = obj_id).one()
 
 
 class ModelWithTID(Model):
@@ -165,7 +169,7 @@ class ModelWithTID(Model):
     tid = Int(primary=True, default=1)
 
 
-class ModelWithUIDandTID(Model):
+class ModelWithUIDandTID(ModelWithID):
     """
     Base class for models requiring a TID and an ID
     """
@@ -175,7 +179,16 @@ class ModelWithUIDandTID(Model):
     tid = Int(default=1)
 
 
-class User(ModelWithUID):
+class Tenant(ModelWithID):
+    """
+    Class used to implement tenants
+    """
+    label = Unicode(validator=shorttext_v)
+
+    unicode_keys = ['label']
+
+
+class User(ModelWithUIDandTID):
     """
     This model keeps track of globaleaks users.
     """
@@ -220,7 +233,7 @@ class User(ModelWithUID):
     bool_keys = ['deletable', 'password_change_needed']
 
 
-class Context(ModelWithUID):
+class Context(ModelWithUIDandTID):
     """
     This model keeps track of contexts settings.
     """
@@ -280,6 +293,7 @@ class Context(ModelWithUID):
       'enable_attachments',
       'enable_rc_to_wb_files'
     ]
+
 
 class InternalTip(ModelWithUID):
     """
@@ -669,12 +683,51 @@ class SecureFileDelete(ModelWithUID):
     filepath = Unicode()
 
 
-class ApplicationData(ModelWithUID):
-    version = Int()
-    default_questionnaire = JSON()
+class Counter(ModelWithTID):
+    """
+    Class used to implement unique counters
+    """
+    __storm_primary__  = 'tid', 'key'
 
-    int_keys = ['version']
-    json_keys = ['default_questionnaire']
+    key = Unicode(validator=shorttext_v)
+    counter = Int(default=1)
+    update_date = DateTime(default_factory=datetime_now)
+
+    unicode_keys = ['key']
+    int_keys = ['number']
+
+
+class ShortURL(ModelWithUIDandTID):
+    """
+    Class used to implement url shorteners
+    """
+    shorturl = Unicode(validator=shorturl_v)
+    longurl = Unicode(validator=longurl_v)
+
+    unicode_keys = ['shorturl', 'longurl']
+
+
+class File(ModelWithUIDandTID):
+    """
+    Class used for storing files
+    """
+    key = Unicode()
+    data = Unicode()
+
+    unicode_keys = ['data']
+
+
+class CustomTexts(ModelWithTID):
+    """
+    Class used to implement custom texts
+    """
+    __storm_primary__ = 'tid', 'lang'
+
+    lang = Unicode(primary=True, validator=shorttext_v)
+    texts = JSON()
+
+    unicode_keys = ['lang']
+    json_keys = ['texts']
 
 
 # Follow classes used for Many to Many references
@@ -689,48 +742,15 @@ class ReceiverContext(Model):
     receiver_id = Unicode()
 
 
-class Counter(Model):
+class QuestionnaireTenant(Model):
     """
-    Class used to implement unique counters
+    Class used to implement references between Questionnaires and Tenants
     """
-    key = Unicode(primary=True, validator=shorttext_v)
-    counter = Int(default=1)
-    update_date = DateTime(default_factory=datetime_now)
+    __storm_table__ = 'questionnaire_tenant'
+    __storm_primary__ = 'questionnaire_id', 'tenant_id'
 
-    unicode_keys = ['key']
-    int_keys = ['number']
-
-
-class ShortURL(ModelWithUID):
-    """
-    Class used to implement url shorteners
-    """
-    tid = Int()
-    shorturl = Unicode(validator=shorturl_v)
-    longurl = Unicode(validator=longurl_v)
-
-    unicode_keys = ['shorturl', 'longurl']
-
-
-class File(ModelWithUID):
-    """
-    Class used for storing files
-    """
-    data = Unicode()
-
-    unicode_keys = ['data']
-
-
-class CustomTexts(Model):
-    """
-    Class used to implement custom texts
-    """
-    tid = Int()
-    lang = Unicode(primary=True, validator=shorttext_v)
-    texts = JSON()
-
-    unicode_keys = ['lang']
-    json_keys = ['texts']
+    questionnaire_id = Unicode()
+    tenant_id = Unicode()
 
 
 Context.picture = Reference(Context.img_id, File.id)
@@ -873,4 +893,11 @@ Receiver.contexts = ReferenceSet(
     ReceiverContext.receiver_id,
     ReceiverContext.context_id,
     Context.id
+)
+
+Tenant.questionnaires = ReferenceSet(
+    Tenant.id,
+    QuestionnaireTenant.tenant_id,
+    QuestionnaireTenant.questionnaire_id,
+    Questionnaire.id
 )

@@ -39,7 +39,7 @@ class TestSystemConfigModels(helpers.TestGL):
     def _test_missing_config(self, store):
         self.assertEqual(True, config.is_cfg_valid(store))
 
-        p = config.Config('private', 'smtp_password', 'XXXX')
+        p = config.Config(1, 'private', 'smtp_password', 'XXXX')
         p.var_group = u'outside'
         store.add(p)
 
@@ -61,7 +61,7 @@ class TestSystemConfigModels(helpers.TestGL):
 
         ntfn = config.NotificationFactory(store, 1)
 
-        c = config.Config('notification', 'server', 'guarda.giochi.con.occhi')
+        c = config.Config(1, 'notification', 'server', 'guarda.giochi.con.occhi')
         c.var_name = u'anextravar'
         store.add(c)
 

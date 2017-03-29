@@ -1,6 +1,7 @@
 # -*- coding: UTF-8
 # datainit.py: database initialization
 #   ******************
+import copy
 import json
 import os
 
@@ -13,29 +14,19 @@ from globaleaks.settings import GLSettings
 from globaleaks.utils.utility import log
 
 
-def read_appdata(p):
-    with file(p, 'r') as f:
-        json_string = f.read()
-        appdata_dict = json.loads(json_string)
-        return appdata_dict
-
-
 def load_appdata():
-    return read_appdata(GLSettings.appdata_file)
+    with file(GLSettings.appdata_file, 'r') as f:
+        return json.loads(f.read())
 
 
-def load_archived_appdata(p):
-    return read_appdata(p)
-
-
-def load_default_questionnaires(store):
-    appdata = store.find(models.ApplicationData).one()
-    steps = appdata.default_questionnaire['steps']
-    del appdata.default_questionnaire['steps']
+def load_default_questionnaires(store, appdata):
+    appdata = copy.deepcopy(appdata)
+    steps = appdata['default_questionnaire']['steps']
+    del appdata['default_questionnaire']['steps']
 
     questionnaire = store.find(models.Questionnaire, models.Questionnaire.key == u'default').one()
     if questionnaire is None:
-        questionnaire = models.db_forge_obj(store, models.Questionnaire, appdata.default_questionnaire)
+        questionnaire = models.db_forge_obj(store, models.Questionnaire, appdata['default_questionnaire'])
     else:
         for step in questionnaire.steps:
             store.remove(step)
@@ -63,20 +54,11 @@ def load_default_fields(store):
             db_create_field(store, field_dict, None)
 
 
-def db_update_appdata(store):
-    # Load new appdata
-    appdata_dict = load_appdata()
-
-    # Drop old appdata
-    store.find(models.ApplicationData).remove()
-
-    # Load and setup new appdata
-    store.add(models.ApplicationData(appdata_dict))
-
-    load_default_questionnaires(store)
+def db_update_appdata(store, appdata):
+    load_default_questionnaires(store, appdata)
     load_default_fields(store)
 
-    return appdata_dict
+    return appdata
 
 
 @transact

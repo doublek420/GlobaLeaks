@@ -8,8 +8,10 @@ CREATE TABLE tenant (
 );
 
 CREATE TABLE enabledlanguage (
+    tid INTEGER NOT NULL,
     name TEXT NOT NULL,
-    PRIMARY KEY (name)
+    FOREIGN KEY (tid) REFERENCES tenant(id) ON DELETE CASCADE,
+    PRIMARY KEY (tid, name)
 );
 
 CREATE TABLE config (
@@ -29,12 +31,14 @@ CREATE TABLE config_l10n (
     var_name TEXT NOT NULL,
     value TEXT NOT NULL,
     customized BOOL NOT NULL,
-    FOREIGN KEY (lang) REFERENCES enabledlanguage(name) ON DELETE CASCADE,
-    PRIMARY KEY (lang, var_group, var_name)
+    FOREIGN KEY (tid) REFERENCES tenant(id) ON DELETE CASCADE,
+    FOREIGN KEY (tid, lang) REFERENCES enabledlanguage(tid, name) ON DELETE CASCADE,
+    PRIMARY KEY (tid, lang, var_group, var_name)
 );
 
 CREATE TABLE user (
     id TEXT NOT NULL,
+    tid INTEGER NOT NULL,
     creation_date TEXT NOT NULL,
     username TEXT NOT NULL,
     password TEXT NOT NULL,
@@ -54,8 +58,9 @@ CREATE TABLE user (
     pgp_key_public TEXT NOT NULL,
     pgp_key_expiration INTEGER NOT NULL,
     img_id TEXT,
-    UNIQUE (username),
-    FOREIGN KEY (language) REFERENCES enabledlanguage(name),
+    UNIQUE (tid, username),
+    FOREIGN KEY (tid) REFERENCES tenant(id) ON DELETE CASCADE,
+    FOREIGN KEY (tid, language) REFERENCES enabledlanguage(tid, name),
     FOREIGN KEY (img_id) REFERENCES file(id) ON DELETE SET NULL,
     PRIMARY KEY (id)
 );
@@ -86,6 +91,7 @@ CREATE TABLE comment (
 
 CREATE TABLE context (
     id TEXT NOT NULL,
+    tid INTEGER NOT NULL,
     name BLOB NOT NULL,
     description BLOB NOT NULL,
     recipients_clarification BLOB NOT NULL,
@@ -107,8 +113,10 @@ CREATE TABLE context (
     show_receivers_in_alphabetical_order INTEGER NOT NULL,
     questionnaire_id TEXT NOT NULL,
     img_id TEXT,
+    FOREIGN KEY (tid) REFERENCES tenant(id) ON DELETE CASCADE,
     FOREIGN KEY (questionnaire_id) REFERENCES questionnaire(id) ON DELETE SET NULL,
     FOREIGN KEY (img_id) REFERENCES file(id) ON DELETE SET NULL,
+    FOREIGN KEY (tid) REFERENCES tenant(id) ON DELETE CASCADE,
     PRIMARY KEY (id)
 );
 
@@ -249,13 +257,6 @@ CREATE TABLE whistleblowertip (
     PRIMARY KEY (id)
 );
 
-CREATE TABLE applicationdata (
-    id TEXT NOT NULL,
-    version INTEGER NOT NULL,
-    default_questionnaire BLOB NOT NULL,
-    PRIMARY KEY (id)
-);
-
 CREATE TABLE anomalies (
     id TEXT NOT NULL,
     date TEXT NOT NULL,
@@ -359,6 +360,14 @@ CREATE TABLE questionnaire (
     PRIMARY KEY (id)
 );
 
+CREATE TABLE questionnaire_tenant (
+    questionnaire_id TEXT NOT NULL,
+    tenant_id INTEGER NOT NULL,
+    FOREIGN KEY (questionnaire_id) REFERENCES questionnaire(id) ON DELETE CASCADE,
+    FOREIGN KEY (tenant_id) REFERENCES tenant(id) ON DELETE CASCADE,
+    PRIMARY KEY (questionnaire_id, tenant_id)
+);
+
 CREATE TABLE step (
     id TEXT NOT NULL,
     questionnaire_id TEXT NOT NULL,
@@ -396,7 +405,6 @@ CREATE TABLE archivedschema (
     type TEXT NOT NULL CHECK (type IN ('questionnaire',
                                        'preview')),
     schema BLOB NOT NULL,
-    UNIQUE (hash, type),
     PRIMARY KEY (hash, type)
 );
 
@@ -407,10 +415,12 @@ CREATE TABLE securefiledelete (
 );
 
 CREATE TABLE counter (
+    tid INTEGER NOT NULL,
     key TEXT NOT NULL,
     counter INTEGER NOT NULL,
     update_date TEXT NOT NULL,
-    PRIMARY KEY (key)
+    FOREIGN KEY (tid) REFERENCES tenant(id) ON DELETE CASCADE,
+    PRIMARY KEY (tid, key)
 );
 
 CREATE TABLE shorturl (
@@ -425,7 +435,11 @@ CREATE TABLE shorturl (
 
 CREATE TABLE file (
     id TEXT NOT NULL,
+    tid INTEGER NOT NULL,
+    key TEXT,
     data TEXT NOT NULL,
+    UNIQUE(tid, key),
+    FOREIGN KEY (tid) REFERENCES tenant(id) ON DELETE CASCADE,
     PRIMARY KEY (id)
 );
 

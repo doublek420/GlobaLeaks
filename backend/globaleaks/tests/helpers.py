@@ -23,6 +23,7 @@ from globaleaks.handlers.admin.step import create_step
 from globaleaks.handlers.admin.questionnaire import get_questionnaire
 from globaleaks.handlers.admin.user import create_admin_user, create_custodian_user
 from globaleaks.handlers.submission import create_submission
+from globaleaks.memory import refresh_memory_variables
 from globaleaks.rest.apicache import GLApiCache
 from globaleaks.settings import GLSettings
 from globaleaks.security import GLSecureTemporaryFile
@@ -224,7 +225,7 @@ class TestGL(unittest.TestCase):
 
         yield update_node_setting('allow_unencrypted', allow_unencrypted)
 
-        yield db.refresh_memory_variables()
+        yield refresh_memory_variables()
 
         sup = ProcessSupervisor([], '127.0.0.1', 18082)
         GLSettings.state.process_supervisor = sup

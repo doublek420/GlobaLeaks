@@ -25,7 +25,6 @@ from globaleaks.rest import errors
 
 
 class TestMigrationRoutines(unittest.TestCase):
-
     def setUp(self):
         test_config.skipIf('migration')
 
@@ -90,7 +89,7 @@ class TestConfigUpdates(unittest.TestCase):
 
     def test_migration_error_with_removed_language(self):
         store = Store(create_database(GLSettings.db_uri))
-        zyx = EnabledLanguage('zyx')
+        zyx = EnabledLanguage(1, 'zyx')
         store.add(zyx)
         store.commit()
         store.close()
@@ -200,7 +199,7 @@ class TestMigrationRegression(unittest.TestCase):
         # This test case asserts that data migration updates unmodifiable l10n strings
         self._initStartDB(DATABASE_VERSION)
 
-        notification_l10n = NotificationL10NFactory(self.store)
+        notification_l10n = NotificationL10NFactory(self.store, 1)
         notification_l10n.set_val('export_template', 'en', 'XXX')
         self.store.commit()
 
@@ -216,7 +215,7 @@ class TestMigrationRegression(unittest.TestCase):
         migration.perform_data_update(self.db_file)
 
         store = Store(create_database(GLSettings.db_uri))
-        notification_l10n = NotificationL10NFactory(store)
+        notification_l10n = NotificationL10NFactory(store, 1)
         v = notification_l10n.get_val('export_template', 'it')
         self.assertNotEqual(v, 'XXX')
         store.commit()

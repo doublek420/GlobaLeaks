@@ -4,26 +4,26 @@
 #  *****
 #
 # API handling db files upload/download/delete
-
 import base64
-
 from twisted.internet.defer import inlineCallbacks
 
-from globaleaks import models
 from globaleaks.handlers.base import BaseHandler
+from globaleaks.models import File
 from globaleaks.orm import transact
 from globaleaks.rest.apicache import GLApiCache
 
 
-def db_add_file(store, data, key = None):
+def db_add_file(store, tid, data, key = None):
     file_obj = None
     if key is not None:
-        file_obj = store.find(models.File, models.File.id == key).one()
+        file_obj = store.find(File, tid=tid, key=key).one()
 
     if file_obj is None:
-        file_obj = models.File()
+        file_obj = File()
+        file_obj.tid = tid
         if key is not None:
-            file_obj.id = key
+            file_obj.key = key
+
         store.add(file_obj)
 
     file_obj.data = base64.b64encode(data)
@@ -34,13 +34,9 @@ def add_file(store, data, key = None):
     return db_add_file(store, data, key)
 
 
-def db_get_file(store, key):
-    file_obj = store.find(models.File, models.File.id == key).one()
-
-    if file_obj is None:
-        return ''
-
-    return file_obj.data
+def db_get_file_by_key(store, tid, key):
+    file_obj = store.find(File, tid=tid, key=key).one()
+    return file_obj.data if file_obj is not None else ''
 
 
 @transact
@@ -50,9 +46,7 @@ def get_file(store, key):
 
 @transact
 def del_file(store, key):
-    file_obj = store.find(models.File, models.File.id == key).one()
-    if file_obj is not None:
-        store.remove(file_obj)
+    File.delete(store, key)
 
 
 class FileInstance(BaseHandler):

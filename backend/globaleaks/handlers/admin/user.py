@@ -7,9 +7,9 @@
 from twisted.internet.defer import inlineCallbacks
 
 from globaleaks import models, security
-from globaleaks.db import db_refresh_exception_delivery_list
 from globaleaks.handlers.base import BaseHandler
 from globaleaks.handlers.user import parse_pgp_options, user_serialize_user
+from globaleaks.memory import db_refresh_exception_delivery_list
 from globaleaks.orm import transact
 from globaleaks.rest import requests, errors
 from globaleaks.rest.apicache import GLApiCache

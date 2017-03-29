@@ -1,10 +1,10 @@
 from twisted.internet.defer import inlineCallbacks
 
-from globaleaks.db import db_refresh_memory_variables
 from globaleaks.db.appdata import load_appdata
 from globaleaks.handlers.admin.node import admin_serialize_node
 from globaleaks.handlers.base import BaseHandler
 from globaleaks.handlers.user import get_user_settings
+from globaleaks.memory import db_refresh_memory_variables
 from globaleaks.models.config import NotificationFactory, PrivateFactory
 from globaleaks.models.l10n import NotificationL10NFactory
 from globaleaks.models.properties import iso_strf_time
@@ -52,7 +52,7 @@ def admin_serialize_notification(store, language):
         'smtp_password': '',
     }
 
-    conf_l10n_dict = NotificationL10NFactory(store).localized_dict(language)
+    conf_l10n_dict = NotificationL10NFactory(store, 1).localized_dict(language)
 
     return disjoint_union(config_dict, cmd_flags, conf_l10n_dict)
 

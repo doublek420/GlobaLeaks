@@ -8,7 +8,7 @@ from storm.database import create_database
 from storm.store import Store
 
 from globaleaks import __version__, models, DATABASE_VERSION, FIRST_DATABASE_VERSION_SUPPORTED, LANGUAGES_SUPPORTED_CODES, security
-from globaleaks.db.appdata import db_update_appdata, db_fix_fields_attrs
+from globaleaks.db.appdata import load_appdata, db_update_appdata, db_fix_fields_attrs
 from globaleaks.db.migrations.update_16 import Receiver_v_15, Notification_v_15
 from globaleaks.db.migrations.update_17 import Node_v_16, Receiver_v_16, Notification_v_16, Stats_v_16
 from globaleaks.db.migrations.update_18 import Node_v_17
@@ -34,14 +34,13 @@ from globaleaks.db.migrations.update_33 import Node_v_32, WhistleblowerTip_v_32,
 from globaleaks.db.migrations.update_34 import Node_v_33, Notification_v_33
 from globaleaks.db.migrations.update_35 import Context_v_34, InternalTip_v_34, WhistleblowerTip_v_34
 from globaleaks.db.migrations.update_37 import Config_v_36, ConfigL10N_v_36, CustomTexts_v_36
-from globaleaks.models import config, l10n, tenant
+from globaleaks.models import config, l10n
 from globaleaks.models.config import PrivateFactory
 from globaleaks.settings import GLSettings
 
 migration_mapping = OrderedDict([
     ('Anomalies', [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, models.Anomalies, 0, 0, 0, 0, 0, 0, 0]),
     ('ArchivedSchema', [-1, -1, -1, -1, -1, -1, -1, -1, ArchivedSchema_v_23, models.ArchivedSchema, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
-    ('ApplicationData', [-1, -1, -1, -1, -1, -1, -1, -1, -1, models.ApplicationData, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
     ('Comment', [Comment_v_19, 0, 0, 0, 0, Comment_v_22, 0, 0, Comment_v_31, 0, 0, 0, 0, 0, 0, 0, 0, models.Comment, 0, 0, 0, 0, 0]),
     ('Config', [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, Config_v_36, 0, 0, config.Config]),
     ('ConfigL10N', [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, ConfigL10N_v_36, 0, 0, l10n.ConfigL10N]),
@@ -90,8 +89,9 @@ def db_perform_data_update(store):
 
         # The below commands can change the current store based on the what is
         # currently stored in the DB.
-        appdata = db_update_appdata(store)
-        l10n.update_defaults(store, appdata)
+        appdata = load_appdata()
+        db_update_appdata(store, appdata)
+        l10n.update_defaults(store, 1, appdata)
         config.update_defaults(store)
         db_fix_fields_attrs(store)
 
@@ -206,9 +206,6 @@ def perform_schema_migration(version):
             store_verify = Store(create_database(GLSettings.make_db_uri(new_db_file)))
 
             for model_name, _ in migration_mapping.iteritems():
-                if model_name == 'ApplicationData':
-                    continue
-
                 if migration_script.model_from[model_name] is not None and migration_script.model_to[model_name] is not None:
                      count = store_verify.find(migration_script.model_to[model_name]).count()
                      if migration_script.entries_count[model_name] != count:

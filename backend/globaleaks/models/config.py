@@ -19,7 +19,7 @@ class Config(ModelWithTID):
     value = JSON()
     customized = Bool(default=False)
 
-    def __init__(self, group=None, name=None, value=None, cfg_desc=None, migrate=False):
+    def __init__(self, tid=None, group=None, name=None, value=None, cfg_desc=None, migrate=False):
         """
         :param value:    This input is passed directly into set_v
         :param migrate:  Added to comply with models.Model constructor which is
@@ -34,6 +34,7 @@ class Config(ModelWithTID):
         if migrate:
             return
 
+        self.tid = tid
         self.var_group = unicode(group)
         self.var_name = unicode(name)
 
@@ -105,7 +106,7 @@ class ConfigFactory(object):
 
     def get_cfg(self, var_name):
         if self.res is None:
-            where = And(self.model_class.var_group == self.group, self.model_class.var_name == unicode(var_name))
+            where = And(self.model_class.tid == self.tid, self.model_class.var_group == self.group, self.model_class.var_name == unicode(var_name))
             r = self.store.find(self.model_class, where).one()
             if r is None:
                 raise KeyError("No such config item: %s:%s" % (self.group, var_name))
@@ -154,7 +155,7 @@ class ConfigFactory(object):
 
         for key in missing:
             desc = self.group_desc[key]
-            c = self.model_class(self.group, key, desc.default)
+            c = self.model_class(1, self.group, key, desc.default)
             self.store.add(c)
 
         extra = actual - allowed
@@ -260,10 +261,10 @@ def load_tls_dict(store):
     return tls_cfg
 
 
-def system_cfg_init(store):
+def db_create_config(store, tid):
     for gname, group in GLConfig.iteritems():
         for var_name, cfg_desc in group.iteritems():
-            store.add(Config(gname, var_name, cfg_desc.default))
+            store.add(Config(tid, gname, var_name, cfg_desc.default))
 
 
 def del_cfg_not_in_groups(store):
@@ -320,7 +321,7 @@ def load_tls_dict(store):
     return tls_cfg
 
 
-def add_raw_config(store, model_class, group, name, customized, value):
+def add_raw_config(store, model_class, tid, group, name, customized, value):
     c = model_class(migrate=True)
     c.var_group = group
     c.var_name =  name
