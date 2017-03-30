@@ -10,6 +10,7 @@ from globaleaks.models import *
 from globaleaks.models import l10n, properties
 from globaleaks.settings import GLSettings
 
+from globaleaks.db.migrations.update_34 import files
 from globaleaks.db.migrations.update_34.config import GLConfig_v_35
 from globaleaks.db.migrations.update_37 import Config_v_36
 
