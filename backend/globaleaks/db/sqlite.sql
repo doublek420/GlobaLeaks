@@ -113,7 +113,6 @@ CREATE TABLE context (
     show_receivers_in_alphabetical_order INTEGER NOT NULL,
     questionnaire_id TEXT NOT NULL,
     img_id TEXT,
-    FOREIGN KEY (tid) REFERENCES tenant(id) ON DELETE CASCADE,
     FOREIGN KEY (questionnaire_id) REFERENCES questionnaire(id) ON DELETE SET NULL,
     FOREIGN KEY (img_id) REFERENCES file(id) ON DELETE SET NULL,
     FOREIGN KEY (tid) REFERENCES tenant(id) ON DELETE CASCADE,

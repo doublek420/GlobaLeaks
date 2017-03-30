@@ -44,7 +44,8 @@ def parse_pgp_options(notif, request):
 
 
 def admin_serialize_notification(store, language):
-    config_dict = NotificationFactory(store, 1).admin_export()
+    tid = 1
+    config_dict = NotificationFactory(store, tid).admin_export()
 
     cmd_flags = {
         'reset_templates': False,
@@ -52,7 +53,7 @@ def admin_serialize_notification(store, language):
         'smtp_password': '',
     }
 
-    conf_l10n_dict = NotificationL10NFactory(store, 1).localized_dict(language)
+    conf_l10n_dict = NotificationL10NFactory(store, tid).localized_dict(language)
 
     return disjoint_union(config_dict, cmd_flags, conf_l10n_dict)
 
@@ -68,7 +69,8 @@ def get_notification(store, language):
 
 @transact
 def update_notification(store, request, language):
-    notif_l10n = NotificationL10NFactory(store)
+    tid = 1
+    notif_l10n = NotificationL10NFactory(store, tid)
     notif_l10n.update(request, language)
 
     if request.pop('reset_templates'):

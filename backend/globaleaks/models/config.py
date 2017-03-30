@@ -106,7 +106,9 @@ class ConfigFactory(object):
 
     def get_cfg(self, var_name):
         if self.res is None:
-            where = And(self.model_class.tid == self.tid, self.model_class.var_group == self.group, self.model_class.var_name == unicode(var_name))
+            where = And(self.model_class.tid == self.tid,
+                        self.model_class.var_group == self.group,
+                        self.model_class.var_name == unicode(var_name))
             r = self.store.find(self.model_class, where).one()
             if r is None:
                 raise KeyError("No such config item: %s:%s" % (self.group, var_name))
@@ -155,6 +157,7 @@ class ConfigFactory(object):
 
         for key in missing:
             desc = self.group_desc[key]
+            # TODO(tid_me)
             c = self.model_class(1, self.group, key, desc.default)
             self.store.add(c)
 

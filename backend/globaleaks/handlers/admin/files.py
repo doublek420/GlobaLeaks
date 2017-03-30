@@ -40,6 +40,11 @@ def db_get_file_by_key(store, tid, key):
 
 
 @transact
+def get_file_by_key(store, tid, key):
+    return db_get_file_by_key(store, tid, key)
+
+
+@transact
 def del_file(store, key):
     File.delete(store, key)
 

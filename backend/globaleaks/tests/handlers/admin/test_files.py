@@ -20,5 +20,7 @@ class TestFileInstance(helpers.TestHandler):
         handler = self.request({}, role='admin')
         yield handler.delete(u'antani')
 
-        img = yield files.get_file(u'antani')
+        # TODO(tid_me) assumes tid=1 exists
+        tid = 1
+        img = yield files.get_file_by_key(tid, u'antani')
         self.assertEqual(img, '')
