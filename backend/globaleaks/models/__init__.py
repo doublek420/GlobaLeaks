@@ -188,7 +188,7 @@ class Tenant(ModelWithID):
     unicode_keys = ['label']
 
 
-class User(ModelWithUIDandTID):
+class User(ModelWithUID):
     """
     This model keeps track of globaleaks users.
     """
@@ -521,6 +521,10 @@ class Receiver(ModelWithUID):
     ]
 
 
+class FieldTemplate(ModelWithUIDandTID):
+    pass
+
+
 class Field(ModelWithUID):
     x = Int(default=0)
     y = Int(default=0)
@@ -548,9 +552,12 @@ class Field(ModelWithUID):
     step_id = Unicode()
     template_id = Unicode()
 
+    reference_id = Unicode()
+
     type = Unicode(default=u'inputbox')
 
     instance = Unicode(default=u'instance')
+
     editable = Bool(default=True)
 
     unicode_keys = ['type', 'instance', 'key']
@@ -639,7 +646,7 @@ class Step(ModelWithUID):
     localized_keys = ['label', 'description']
 
 
-class Questionnaire(ModelWithUID):
+class Questionnaire(ModelWithUIDandTID):
     key = Unicode(default=u'')
     name = Unicode()
     show_steps_navigation_bar = Bool(default=False)
@@ -731,6 +738,16 @@ class CustomTexts(ModelWithTID):
 
 
 # Follow classes used for Many to Many references
+class UserTenant(Model):
+    """
+    Class used to implement references between Users and Tenants
+    """
+    __storm_table__ = 'user_tenant'
+    __storm_primary__ = 'user_id', 'tenant_id'
+
+    user_id = Unicode()
+    tenant_id = Int()
+
 class ReceiverContext(Model):
     """
     Class used to implement references between Receivers and Contexts
@@ -742,24 +759,13 @@ class ReceiverContext(Model):
     receiver_id = Unicode()
 
 
-class QuestionnaireTenant(Model):
-    """
-    Class used to implement references between Questionnaires and Tenants
-    """
-    __storm_table__ = 'questionnaire_tenant'
-    __storm_primary__ = 'questionnaire_id', 'tenant_id'
-
-    questionnaire_id = Unicode()
-    tenant_id = Unicode()
-
-
 Context.picture = Reference(Context.img_id, File.id)
 User.picture = Reference(User.img_id, File.id)
 
 
 Field.fieldgroup = Reference(Field.fieldgroup_id, Field.id)
 Field.step = Reference(Field.step_id, Step.id)
-Field.template = Reference(Field.template_id, Field.id)
+Field.reference = Reference(Field.reference_id, Field.id)
 
 Field.options = ReferenceSet(
     Field.id,
@@ -895,9 +901,9 @@ Receiver.contexts = ReferenceSet(
     Context.id
 )
 
-Tenant.questionnaires = ReferenceSet(
+Tenant.users = ReferenceSet(
     Tenant.id,
-    QuestionnaireTenant.tenant_id,
-    QuestionnaireTenant.questionnaire_id,
-    Questionnaire.id
+    UserTenant.tenant_id,
+    UserTenant.user_id,
+    User.id
 )

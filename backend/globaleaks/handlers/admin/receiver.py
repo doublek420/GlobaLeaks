@@ -40,41 +40,35 @@ def admin_serialize_receiver(receiver, language):
     return get_localized_values(ret_dict, receiver, receiver.localized_keys, language)
 
 
+def db_get_usermodel_list(store, model, tid):
+    return store.find(model, model.id == models.UserTenant.user_id,
+                             models.UserTenant.tenant_id == tid)
+
+def db_get_usermodel(store, model, tid, id):
+    return store.find(model, model.id == id,
+                             model.id == models.UserTenant.user_id,
+                             models.UserTenant.tenant_id == tid).one()
+
 @transact
-def get_receiver_list(store, language):
+def get_receiver_list(store, tid, language):
     """
     Returns:
         (list) the list of receivers
     """
     return [admin_serialize_receiver(receiver, language)
-        for receiver in store.find(models.Receiver)]
+        for receiver in db_get_usermodel_list(store, models.Receiver, tid)]
 
 
 @transact
-def create_receiver(store, request, language):
+def create_receiver(store, tid, request, language):
     request['tip_expiration_threshold'] = GLSettings.memory_copy.notif.tip_expiration_threshold
-    receiver = db_create_receiver(store, request, language)
+    receiver = db_create_receiver(store, tid, request, language)
     return admin_serialize_receiver(receiver, language)
 
 
-def db_get_receiver(store, receiver_id):
-    """
-    raises :class:`globaleaks.errors.ReceiverIdNotFound` if the receiver does
-    not exist.
-    Returns:
-        (dict) the receiver
-
-    """
-    receiver = models.Receiver.get(store, receiver_id)
-    if not receiver:
-        raise errors.ReceiverIdNotFound
-
-    return receiver
-
-
 @transact
-def get_receiver(store, receiver_id, language):
-    return admin_serialize_receiver(db_get_receiver(store, receiver_id), language)
+def get_receiver(store, tid, receiver_id, language):
+    return admin_serialize_receiver(db_get_usermodel(store, models.Receiver, tid, receiver_id), language)
 
 
 @transact
@@ -118,7 +112,8 @@ class ReceiversCollection(BaseHandler):
         Response: adminReceiverList
         Errors: None
         """
-        response = yield get_receiver_list(self.request.language)
+        response = yield get_receiver_list(self.request.current_tenant_id,
+                                           self.request.language)
 
         self.write(response)
 
@@ -135,7 +130,9 @@ class ReceiverInstance(BaseHandler):
         Response: AdminReceiverDesc
         Errors: InvalidInputFormat, ReceiverIdNotFound
         """
-        response = yield get_receiver(receiver_id, self.request.language)
+        response = yield get_receiver(self.request.current_tenant_id,
+                                      receiver_id,
+                                      self.request.language)
 
         self.write(response)
 

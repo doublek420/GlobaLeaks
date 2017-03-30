@@ -18,13 +18,13 @@ from globaleaks.utils.structures import fill_localized_keys
 from globaleaks.utils.utility import log, datetime_now
 
 
-def db_create_admin_user(store, request, language):
+def db_create_admin_user(store, tid, request, language):
     """
     Creates a new admin
     Returns:
         (dict) the admin descriptor
     """
-    user = db_create_user(store, request, language)
+    user = db_create_user(store, tid, request, language)
 
     log.debug("Created new admin")
 
@@ -32,18 +32,19 @@ def db_create_admin_user(store, request, language):
 
     return user
 
+
 @transact
-def create_admin_user(store, request, language):
-    return user_serialize_user(db_create_admin_user(store, request, language), language)
+def create_admin_user(store, tid, request, language):
+    return user_serialize_user(db_create_admin_user(store, tid, request, language), language)
 
 
-def db_create_custodian_user(store, request, language):
+def db_create_custodian_user(store, tid, request, language):
     """
     Creates a new custodian
     Returns:
         (dict) the custodian descriptor
     """
-    user = db_create_user(store, request, language)
+    user = db_create_user(store, tid, request, language)
 
     log.debug("Created new custodian")
 
@@ -51,17 +52,17 @@ def db_create_custodian_user(store, request, language):
 
 
 @transact
-def create_custodian_user(store, request, language):
-    return user_serialize_user(db_create_custodian_user(store, request, language), language)
+def create_custodian_user(store, tid, request, language):
+    return user_serialize_user(db_create_custodian_user(store, tid, request, language), language)
 
 
-def db_create_receiver(store, request, language):
+def db_create_receiver(store, tid, request, language):
     """
     Creates a new receiver
     Returns:
         (dict) the receiver descriptor
     """
-    user = db_create_user(store, request, language)
+    user = db_create_user(store, tid, request, language)
 
     fill_localized_keys(request, models.Receiver.localized_keys, language)
 
@@ -83,13 +84,14 @@ def db_create_receiver(store, request, language):
 
     return receiver
 
+
 @transact
-def create_receiver_user(store, request, language):
-    receiver = db_create_receiver(store, request, language)
+def create_receiver_user(store, tid, request, language):
+    receiver = db_create_receiver(store, tid, request, language)
     return user_serialize_user(receiver.user, language)
 
 
-def db_create_user(store, request, language):
+def db_create_user(store, tid, request, language):
     fill_localized_keys(request, models.User.localized_keys, language)
 
     user = models.User({
@@ -120,15 +122,21 @@ def db_create_user(store, request, language):
 
     store.add(user)
 
+    store.flush()
+
+    tenant = store.get(models.Tenant, tid)
+
+    tenant.users.add(user)
+
     return user
 
 
-def db_admin_update_user(store, user_id, request, language):
+def db_admin_update_user(store, tid, user_id, request, language):
     """
     Updates the specified user.
     raises: globaleaks.errors.UserIdNotFound` if the user does not exist.
     """
-    user = store.find(models.User, id=user_id).one()
+    user = db_get_user(store, tid, user_id)
     if not user:
         raise errors.UserIdNotFound
 
@@ -151,18 +159,16 @@ def db_admin_update_user(store, user_id, request, language):
 
 
 @transact
-def admin_update_user(store, user_id, request, language):
-    return user_serialize_user(db_admin_update_user(store, user_id, request, language), language)
+def admin_update_user(store, tid, user_id, request, language):
+    user = db_admin_update_user(store, tid, user_id, request, language)
+    return user_serialize_user(user, language)
 
 
-def db_get_user(store, user_id):
-    """
-    raises :class:`globaleaks.errors.UserIdNotFound` if the user does
-    not exist.
-    Returns:
-        (dict) the user
-    """
-    user = store.find(models.User, id=user_id).one()
+def db_get_user(store, tid, user_id):
+    user = store.find(models.User, models.User.id == user_id,
+                                   models.User.id == models.UserTenant.user_id,
+                                   models.UserTenant.tenant_id == tid).one()
+
     if not user:
         raise errors.UserIdNotFound
 
@@ -170,19 +176,21 @@ def db_get_user(store, user_id):
 
 
 @transact
-def get_user(store, user_id, language):
-    user = db_get_user(store, user_id)
-    return user_serialize_user(user, language)
+def get_user(store, tid, user_id, language):
+    return user_serialize_user(db_get_user(store, tid, user_id), language)
 
 
-def db_get_admin_users(store):
-    return [user_serialize_user(user, GLSettings.memory_copy.default_language)
-            for user in store.find(models.User,models.User.role == u'admin')]
+def db_get_admin_users(store, tid):
+    users = store.find(models.User, models.User.role == u'admin',
+                                    models.User.id == models.UserTenant.user_id,
+                                    models.UserTenant.tenant_id == tid)
+
+    return [user_serialize_user(user, GLSettings.memory_copy.default_language) for user in users]
 
 
 @transact
-def delete_user(store, user_id):
-    user = db_get_user(store, user_id)
+def delete_user(store, tid, user_id):
+    user = db_get_user(store, tid, user_id)
 
     if not user.deletable:
         raise errors.UserNotDeletable
@@ -190,14 +198,18 @@ def delete_user(store, user_id):
     store.remove(user)
 
 
+def db_get_user_list(store, tid):
+    return store.find(models.User, models.User.id == models.UserTenant.user_id,
+                                   models.UserTenant.tenant_id == tid)
+
+
 @transact
-def get_user_list(store, language):
+def get_user_list(store, tid, language):
     """
     Returns:
         (list) the list of users
     """
-    users = store.find(models.User)
-    return [user_serialize_user(user, language) for user in users]
+    return [user_serialize_user(user, language) for user in db_get_user_list(store, tid)]
 
 
 class UsersCollection(BaseHandler):
@@ -212,7 +224,8 @@ class UsersCollection(BaseHandler):
         Response: adminUsersList
         Errors: None
         """
-        response = yield get_user_list(self.request.language)
+        response = yield get_user_list(self.request.current_tenant_id,
+                                       self.request.language)
 
         self.write(response)
 
@@ -230,12 +243,14 @@ class UsersCollection(BaseHandler):
         request = self.validate_message(self.request.body,
                                         requests.AdminUserDesc)
 
+        tid = self.request.current_tenant_id
+
         if request['role'] == 'receiver':
-            response = yield create_receiver_user(request, self.request.language)
+            response = yield create_receiver_user(tid, request, self.request.language)
         elif request['role'] == 'custodian':
-            response = yield create_custodian_user(request, self.request.language)
+            response = yield create_custodian_user(tid, request, self.request.language)
         elif request['role'] == 'admin':
-            response = yield create_admin_user(request, self.request.language)
+            response = yield create_admin_user(tid, request, self.request.language)
         else:
             raise errors.InvalidInputFormat
 
@@ -257,7 +272,9 @@ class UserInstance(BaseHandler):
         Response: AdminUserDesc
         Errors: InvalidInputFormat, UserIdNotFound
         """
-        response = yield get_user(user_id, self.request.language)
+        response = yield get_user(self.request.current_tenant_id,
+                                  user_id,
+                                  self.request.language)
 
         self.write(response)
 
@@ -275,7 +292,11 @@ class UserInstance(BaseHandler):
         """
         request = self.validate_message(self.request.body, requests.AdminUserDesc)
 
-        response = yield admin_update_user(user_id, request, self.request.language)
+        response = yield admin_update_user(self.request.current_tenant_id,
+                                           user_id,
+                                           request,
+                                           self.request.language)
+
         GLApiCache.invalidate(self.request.current_tenant_id)
 
         self.set_status(201)
@@ -293,6 +314,6 @@ class UserInstance(BaseHandler):
         Response: None
         Errors: InvalidInputFormat, UserIdNotFound
         """
-        yield delete_user(user_id)
+        yield delete_user(self.request.current_tenant_id, user_id)
 
         GLApiCache.invalidate(self.request.current_tenant_id)

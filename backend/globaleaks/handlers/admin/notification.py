@@ -1,3 +1,4 @@
+from globaleaks.tid import XTIDX
 from twisted.internet.defer import inlineCallbacks
 
 from globaleaks.db.appdata import load_appdata
@@ -44,8 +45,7 @@ def parse_pgp_options(notif, request):
 
 
 def admin_serialize_notification(store, language):
-    tid = 1
-    config_dict = NotificationFactory(store, tid).admin_export()
+    config_dict = NotificationFactory(store, XTIDX).admin_export()
 
     cmd_flags = {
         'reset_templates': False,
@@ -53,7 +53,7 @@ def admin_serialize_notification(store, language):
         'smtp_password': '',
     }
 
-    conf_l10n_dict = NotificationL10NFactory(store, tid).localized_dict(language)
+    conf_l10n_dict = NotificationL10NFactory(store, XTIDX).localized_dict(language)
 
     return disjoint_union(config_dict, cmd_flags, conf_l10n_dict)
 
@@ -69,8 +69,7 @@ def get_notification(store, language):
 
 @transact
 def update_notification(store, request, language):
-    tid = 1
-    notif_l10n = NotificationL10NFactory(store, tid)
+    notif_l10n = NotificationL10NFactory(store, XTIDX)
     notif_l10n.update(request, language)
 
     if request.pop('reset_templates'):
@@ -79,9 +78,9 @@ def update_notification(store, request, language):
 
     smtp_pw = request.pop('smtp_password', u'')
     if smtp_pw != u'':
-        PrivateFactory(store, 1).set_val('smtp_password', smtp_pw)
+        PrivateFactory(store, XTIDX).set_val('smtp_password', smtp_pw)
 
-    notif = NotificationFactory(store, 1)
+    notif = NotificationFactory(store, XTIDX)
     notif.update(request)
 
     parse_pgp_options(notif, request)

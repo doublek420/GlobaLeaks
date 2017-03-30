@@ -119,6 +119,14 @@ def db_create_field(store, field_dict, language):
     """
     fill_localized_keys(field_dict, models.Field.localized_keys, language)
 
+    if field_dict['instance'] == 'template':
+        template = models.FieldTemplate()
+        template.tid = 1
+        store.add(template)
+        store.flush()
+        field_dict['instance'] = 'instance'
+        field_dict['template_id'] = template.id
+
     field = models.Field(field_dict)
 
     if field_dict['template_id'] != '':
@@ -137,10 +145,10 @@ def db_create_field(store, field_dict, language):
 
     store.add(field)
 
-    if field.template:
+    if field.reference:
         # special handling of the whistleblower_identity field
-        if field.template.key == 'whistleblower_identity':
-            if field.step:
+        if field.reference.key == 'whistleblower_identity':
+            if field.step_id is not None:
                 if store.find(models.Field, models.Field.key == u'whistleblower_identity',
                                             models.Field.step_id == models.Step.id,
                                             models.Step.questionnaire_id == models.Questionnaire.id,
@@ -273,9 +281,9 @@ def delete_field(store, field_id):
             raise errors.InvalidInputFormat("Cannot remove the field template as it is used by one or more questionnaires")
 
 
-    if field.template:
+    if field.reference_id:
         # special handling of the whistleblower_identity field
-        if field.template.key == 'whistleblower_identity':
+        if field.reference.key == 'whistleblower_identity':
             if field.step is not None:
                 field.step.questionnaire.enable_whistleblower_identity = False
 

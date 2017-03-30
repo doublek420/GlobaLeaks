@@ -8,6 +8,8 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf8')
 
+from globaleaks.tid import XTIDX
+
 from globaleaks import db, models, security, event, jobs
 from globaleaks.anomaly import Alarm
 from globaleaks.db.appdata import load_appdata
@@ -524,21 +526,21 @@ class TestGLWithPopulatedDB(TestGL):
     @inlineCallbacks
     def fill_data(self):
         # fill_data/create_admin
-        self.dummyAdminUser = yield create_admin_user(copy.deepcopy(self.dummyAdminUser), 'en')
+        self.dummyAdminUser = yield create_admin_user(XTIDX, copy.deepcopy(self.dummyAdminUser), 'en')
 
         # fill_data/create_custodian
-        self.dummyCustodianUser = yield create_custodian_user(copy.deepcopy(self.dummyCustodianUser), 'en')
+        self.dummyCustodianUser = yield create_custodian_user(XTIDX, copy.deepcopy(self.dummyCustodianUser), 'en')
 
         # fill_data/create_receiver
-        self.dummyReceiver_1 = yield create_receiver(copy.deepcopy(self.dummyReceiver_1), 'en')
+        self.dummyReceiver_1 = yield create_receiver(XTIDX, copy.deepcopy(self.dummyReceiver_1), 'en')
         self.dummyReceiverUser_1['id'] = self.dummyReceiver_1['id']
-        self.dummyReceiver_2 = yield create_receiver(copy.deepcopy(self.dummyReceiver_2), 'en')
+        self.dummyReceiver_2 = yield create_receiver(XTIDX, copy.deepcopy(self.dummyReceiver_2), 'en')
         self.dummyReceiverUser_2['id'] = self.dummyReceiver_2['id']
         receivers_ids = [self.dummyReceiver_1['id'], self.dummyReceiver_2['id']]
 
         # fill_data/create_context
         self.dummyContext['receivers'] = receivers_ids
-        self.dummyContext = yield create_context(copy.deepcopy(self.dummyContext), 'en')
+        self.dummyContext = yield create_context(XTIDX, copy.deepcopy(self.dummyContext), 'en')
 
         self.dummyQuestionnaire = yield get_questionnaire(self.dummyContext['questionnaire_id'], 'en')
 

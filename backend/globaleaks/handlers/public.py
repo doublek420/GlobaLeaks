@@ -166,8 +166,8 @@ def serialize_field(store, field, language):
     # this code is inspired by:
     #  - https://www.youtube.com/watch?v=KtNsUgKgj9g
 
-    if field.template:
-        f_to_serialize = field.template
+    if field.reference_id:
+        f_to_serialize = field.reference
     else:
         f_to_serialize = field
 

@@ -48,7 +48,7 @@ def wizard(store, tid, request, language):
 
         request['receiver']['contexts'] = [context.id]
         request['receiver']['language'] = language
-        db_create_receiver(store, request['receiver'], language)
+        db_create_receiver(store, tid, request['receiver'], language)
 
         admin_dict = {
             'username': u'admin',
@@ -68,7 +68,7 @@ def wizard(store, tid, request, language):
             'pgp_key_expiration': datetime_null()
         }
 
-        db_create_admin_user(store, admin_dict, language)
+        db_create_admin_user(store, tid, admin_dict, language)
 
     except Exception as excep:
         log.err("Failed wizard initialization %s" % excep)

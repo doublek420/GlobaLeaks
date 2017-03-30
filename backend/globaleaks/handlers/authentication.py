@@ -10,7 +10,7 @@ from twisted.internet.defer import inlineCallbacks
 
 from globaleaks import security
 from globaleaks.handlers.base import BaseHandler, GLSessions, GLSession
-from globaleaks.models import User
+from globaleaks.models import User, UserTenant
 from globaleaks.models import WhistleblowerTip
 from globaleaks.orm import transact
 from globaleaks.rest import errors, requests
@@ -73,12 +73,14 @@ def login_whistleblower(store, receipt, using_tor2web):
 
 
 @transact
-def login(store, username, password, using_tor2web):
+def login(store, tid, username, password, using_tor2web):
     """
     login returns a tuple (user_id, state, pcn)
     """
-    user = store.find(User, And(User.username == username,
-                                User.state != u'disabled')).one()
+    user = store.find(User, And(User.username==username,
+                                User.state!=u'disabled',
+                                UserTenant.user_id==User.id,
+                                UserTenant.tenant_id==tid)).one()
 
     if not user or not security.check_password(password,  user.salt, user.password):
         log.debug("Login: Invalid credentials")
@@ -134,7 +136,7 @@ class AuthenticationHandler(BaseHandler):
         using_tor2web = self.check_tor2web()
 
         try:
-            user_id, status, role, pcn = yield login(username, password, using_tor2web)
+            user_id, status, role, pcn = yield login(self.request.current_tenant_id, username, password, using_tor2web)
             # Revoke all other sessions for the newly authenticated user
             GLSessions.revoke_all_sessions(user_id)
         finally:

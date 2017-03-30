@@ -38,7 +38,6 @@ CREATE TABLE config_l10n (
 
 CREATE TABLE user (
     id TEXT NOT NULL,
-    tid INTEGER NOT NULL,
     creation_date TEXT NOT NULL,
     username TEXT NOT NULL,
     password TEXT NOT NULL,
@@ -58,9 +57,6 @@ CREATE TABLE user (
     pgp_key_public TEXT NOT NULL,
     pgp_key_expiration INTEGER NOT NULL,
     img_id TEXT,
-    UNIQUE (tid, username),
-    FOREIGN KEY (tid) REFERENCES tenant(id) ON DELETE CASCADE,
-    FOREIGN KEY (tid, language) REFERENCES enabledlanguage(tid, name),
     FOREIGN KEY (img_id) REFERENCES file(id) ON DELETE SET NULL,
     PRIMARY KEY (id)
 );
@@ -226,14 +222,6 @@ CREATE TABLE receiver (
     PRIMARY KEY (id)
 );
 
-CREATE TABLE receiver_context (
-    context_id TEXT NOT NULL,
-    receiver_id TEXT NOT NULL,
-    FOREIGN KEY (context_id) REFERENCES context(id) ON DELETE CASCADE,
-    FOREIGN KEY (receiver_id) REFERENCES receiver(id) ON DELETE CASCADE,
-    PRIMARY KEY (context_id, receiver_id)
-);
-
 CREATE TABLE receivertip (
     id TEXT NOT NULL,
     internaltip_id TEXT NOT NULL,
@@ -272,10 +260,18 @@ CREATE TABLE stats (
     PRIMARY KEY (id)
 );
 
+CREATE TABLE fieldtemplate (
+    id TEXT NOT NULL,
+    tid INTEGER NOT NULL,
+    PRIMARY KEY (id)
+);
+
 CREATE TABLE field (
     id TEXT NOT NULL,
     fieldgroup_id TEXT,
     step_id TEXT,
+    template_id TEXT,
+    reference_id TEXT,
     key TEXT NOT NULL,
     label TEXT NOT NULL,
     description TEXT NOT NULL,
@@ -285,7 +281,6 @@ CREATE TABLE field (
     required INTEGER DEFAULT 0 NOT NULL,
     preview INTEGER NOT NULL,
     stats_enabled INTEGER DEFAULT 0 NOT NULL,
-    template_id TEXT,
     triggered_by_score INTEGER DEFAULT 0 NOT NULL,
     x INTEGER DEFAULT 0 NOT NULL,
     y INTEGER DEFAULT 0 NOT NULL,
@@ -303,22 +298,21 @@ CREATE TABLE field (
                                        'date',
                                        'email',
                                        'fieldgroup')),
-    instance TEXT NOT NULL CHECK (instance IN ('instance',
-                                               'reference',
-                                               'template')),
+    instance TEXT NOT NULL CHECK (instance IN ('instance', 'reference')),
     editable INT NOT NULL,
     FOREIGN KEY (fieldgroup_id) REFERENCES field(id) ON DELETE CASCADE,
     FOREIGN KEY (step_id) REFERENCES step(id) ON DELETE CASCADE,
-    FOREIGN KEY (template_id) REFERENCES field(id) ON DELETE CASCADE,
+    FOREIGN KEY (template_id) REFERENCES fieldtemplate(id) ON DELETE CASCADE,
+    FOREIGN KEY (reference_id) REFERENCES field(id) ON DELETE CASCADE,
     PRIMARY KEY (id),
-    CONSTRAINT check_parent CHECK ((instance IS 'instance' AND template_id IS NULL AND
-                                                               ((step_id IS NOT NULL AND fieldgroup_id IS NULL) OR
-                                                               (step_id IS NULL AND fieldgroup_id IS NOT NULL))) OR
-                                   (instance IS 'reference' AND template_id is NOT NULL AND
-                                                                ((step_id IS NOT NULL AND fieldgroup_id IS NULL) OR
-                                                                 (step_id IS NULL AND fieldgroup_id IS NOT NULL))) OR
-                                   (instance IS 'template' AND template_id IS NULL AND
-                                                               (step_id IS NULL OR fieldgroup_id IS NULL)))
+    CONSTRAINT check_parent CHECK ((template_id IS NOT NULL AND
+                                       (step_id IS NULL AND fieldgroup_id IS NULL)) OR
+                                   (step_id IS NOT NULL AND
+                                       (template_id IS NULL AND fieldgroup_id IS NULL)) OR
+                                   (fieldgroup_id IS NOT NULL AND
+                                       (template_id IS NULL AND step_id IS NULL))),
+    CONSTRAINT check_reference CHECK ((instance IS 'instance' AND reference_id IS NULL) OR
+                                      (instance IS 'reference' AND reference_id IS NULL))
 );
 
 CREATE TABLE fieldattr (
@@ -350,6 +344,7 @@ CREATE TABLE fieldoption (
 
 CREATE TABLE questionnaire (
     id TEXT NOT NULL,
+    tid INTEGER NOT NULL,
     key TEXT NOT NULL,
     name TEXT NOT NULL,
     show_steps_navigation_bar INTEGER NOT NULL,
@@ -357,14 +352,6 @@ CREATE TABLE questionnaire (
     enable_whistleblower_identity INTEGER NOT NULL,
     editable INTEGER NOT NULL,
     PRIMARY KEY (id)
-);
-
-CREATE TABLE questionnaire_tenant (
-    questionnaire_id TEXT NOT NULL,
-    tenant_id INTEGER NOT NULL,
-    FOREIGN KEY (questionnaire_id) REFERENCES questionnaire(id) ON DELETE CASCADE,
-    FOREIGN KEY (tenant_id) REFERENCES tenant(id) ON DELETE CASCADE,
-    PRIMARY KEY (questionnaire_id, tenant_id)
 );
 
 CREATE TABLE step (
@@ -448,6 +435,22 @@ CREATE TABLE customtexts (
     texts BLOB NOT NULL,
     FOREIGN KEY (tid) REFERENCES tenant(id) ON DELETE CASCADE,
     PRIMARY KEY (tid, lang)
+);
+
+CREATE TABLE user_tenant (
+    user_id TEXT NOT NULL,
+    tenant_id INTEGER NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE,
+    FOREIGN KEY (tenant_id) REFERENCES tenant(id) ON DELETE CASCADE,
+    PRIMARY KEY (user_id, tenant_id)
+);
+
+CREATE TABLE receiver_context (
+    context_id TEXT NOT NULL,
+    receiver_id TEXT NOT NULL,
+    FOREIGN KEY (context_id) REFERENCES context(id) ON DELETE CASCADE,
+    FOREIGN KEY (receiver_id) REFERENCES receiver(id) ON DELETE CASCADE,
+    PRIMARY KEY (context_id, receiver_id)
 );
 
 CREATE INDEX fieldattr__field_id_index ON fieldattr(field_id);

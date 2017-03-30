@@ -52,7 +52,7 @@ def admin_serialize_context(store, context, language):
 
 
 @transact
-def get_context_list(store, language):
+def get_context_list(store, tid, language):
     """
     Returns the context list.
 
@@ -61,7 +61,7 @@ def get_context_list(store, language):
     :return: a dictionary representing the serialization of the contexts.
     """
     return [admin_serialize_context(store, context, language)
-        for context in store.find(models.Context)]
+        for context in store.find(models.Context, tid=tid)]
 
 
 def db_associate_context_receivers(store, context, receivers_ids):
@@ -75,12 +75,14 @@ def db_associate_context_receivers(store, context, receivers_ids):
 
 
 @transact
-def get_context(store, context_id, language):
+def get_context(store, tid, context_id, language):
     """
     Returns:
         (dict) the context with the specified id.
     """
-    context = store.find(models.Context, models.Context.id == context_id).one()
+    context = store.find(models.Context,
+                         id = context_id,
+                         tid = tid).one()
 
     if not context:
         log.err("Requested invalid context")
@@ -148,7 +150,7 @@ def db_create_steps(store, context, steps, language):
         context.steps.add(db_create_step(store, step, language))
 
 
-def db_create_context(store, request, language):
+def db_create_context(store, tid, request, language):
     request = fill_context_request(request, language)
 
     if request['questionnaire_id'] == '':
@@ -159,6 +161,8 @@ def db_create_context(store, request, language):
 
     context = models.Context(request)
 
+    context.tid = tid
+
     store.add(context)
 
     db_associate_context_receivers(store, context, request['receivers'])
@@ -167,7 +171,7 @@ def db_create_context(store, request, language):
 
 
 @transact
-def create_context(store, request, language):
+def create_context(store, tid, request, language):
     """
     Creates a new context from the request of a client.
 
@@ -180,13 +184,13 @@ def create_context(store, request, language):
     Returns:
         (dict) representing the configured context
     """
-    context = db_create_context(store, request, language)
+    context = db_create_context(store, tid, request, language)
 
     return admin_serialize_context(store, context, language)
 
 
 @transact
-def update_context(store, context_id, request, language):
+def update_context(store, tid, context_id, request, language):
     """
     Updates the specified context. If the key receivers is specified we remove
     the current receivers of the Context and reset set it to the new specified
@@ -202,7 +206,8 @@ def update_context(store, context_id, request, language):
     Returns:
             (dict) the serialized object updated
     """
-    context = store.find(models.Context, models.Context.id == context_id).one()
+    context = store.find(models.Context, id=context_id,
+                                         tid=tid).one()
     if not context:
         raise errors.ContextIdNotFound
 
@@ -215,7 +220,7 @@ def update_context(store, context_id, request, language):
 
 
 @transact
-def delete_context(store, context_id):
+def delete_context(store, tid, context_id):
     """
     Deletes the specified context. If no such context exists raises
     :class:`globaleaks.errors.ContextIdNotFound`.
@@ -223,7 +228,8 @@ def delete_context(store, context_id):
     Args:
         context_id: the context id of the context to remove.
     """
-    context = store.find(models.Context, models.Context.id == context_id).one()
+    context = store.find(models.Context, id=context_id,
+                                         tid=tid).one()
     if not context:
         log.err("Invalid context requested in removal")
         raise errors.ContextIdNotFound
@@ -243,7 +249,8 @@ class ContextsCollection(BaseHandler):
         Response: adminContextList
         Errors: None
         """
-        response = yield get_context_list(self.request.language)
+        response = yield get_context_list(self.request.current_tenant_id,
+                                          self.request.language)
 
         self.write(response)
 
@@ -262,7 +269,7 @@ class ContextsCollection(BaseHandler):
 
         request = self.validate_message(self.request.body, validator)
 
-        response = yield create_context(request, self.request.language)
+        response = yield create_context(self.request.current_tenant_id, request, self.request.language)
 
         GLApiCache.invalidate(self.request.current_tenant_id)
 
@@ -282,7 +289,9 @@ class ContextInstance(BaseHandler):
         Response: AdminContextDesc
         Errors: ContextIdNotFound, InvalidInputFormat
         """
-        response = yield get_context(context_id, self.request.language)
+        response = yield get_context(self.request.current_tenant_id,
+                                     context_id,
+                                     self.request.language)
 
         self.write(response)
 
@@ -303,7 +312,11 @@ class ContextInstance(BaseHandler):
         request = self.validate_message(self.request.body,
                                         requests.AdminContextDesc)
 
-        response = yield update_context(context_id, request, self.request.language)
+        response = yield update_context(self.request.current_tenant_id,
+                                        context_id,
+                                        request,
+                                        self.request.language)
+
         GLApiCache.invalidate(self.request.current_tenant_id)
 
         self.set_status(202) # Updated
@@ -320,5 +333,5 @@ class ContextInstance(BaseHandler):
         Response: None
         Errors: InvalidInputFormat, ContextIdNotFound
         """
-        yield delete_context(context_id)
+        yield delete_context(self.request.current_tenant_id, context_id)
         GLApiCache.invalidate(self.request.current_tenant_id)
