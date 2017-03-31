@@ -248,7 +248,6 @@ class GLSettingsClass(object):
         self.tmp_upload_path = os.path.abspath(os.path.join(self.files_path, 'tmp'))
         self.static_path = os.path.abspath(os.path.join(self.files_path, 'static'))
         self.static_db_source = os.path.abspath(os.path.join(self.root_path, 'globaleaks', 'db'))
-        self.torhs_path = os.path.abspath(os.path.join(self.working_path, 'torhs'))
         self.ssl_file_path = os.path.abspath(os.path.join(self.files_path, 'ssl'))
 
         self.db_schema = os.path.join(self.static_db_source, 'sqlite.sql')
@@ -309,22 +308,6 @@ class GLSettingsClass(object):
 
         signal.signal(signal.SIGQUIT, start_pdb)
 
-    def validate_tor_dir_struct(self, tor_dir):
-        """
-        Return False instead of sys.exit(-1) because at the startup this directory
-        can be empty
-        """
-        if not os.path.isdir(tor_dir):
-            self.print_msg("Invalid directory provided as -D argument (%s)" % self.cmdline_options.tor_dir)
-            return False
-
-        hostname_tor_file = os.path.join(tor_dir, 'hostname')
-        if not os.path.isfile(hostname_tor_file):
-            self.print_msg("Not found 'hostname' file as expected in Tor dir (-D %s): skipped" % tor_dir)
-            return False
-
-        return True
-
     def load_cmdline_options(self):
         self.nodaemon = self.cmdline_options.nodaemon
 
@@ -357,16 +340,6 @@ class GLSettingsClass(object):
 
         if self.cmdline_options.ramdisk:
             self.ramdisk_path = self.cmdline_options.ramdisk
-
-        if self.cmdline_options.tor_dir and self.validate_tor_dir_struct(self.cmdline_options.tor_dir):
-            hostname_tor_file = os.path.join(self.cmdline_options.tor_dir, 'hostname')
-
-            if not os.access(hostname_tor_file, os.R_OK):
-                self.print_msg("Tor HS file in %s cannot be read" % hostname_tor_file)
-                sys.exit(-1)
-
-            with file(hostname_tor_file, 'r') as htf:
-                self.tor_address = htf.read(22)
 
         if self.cmdline_options.user and self.cmdline_options.group:
             self.user = self.cmdline_options.user
@@ -450,7 +423,6 @@ class GLSettingsClass(object):
                         self.files_path,
                         self.submission_path,
                         self.tmp_upload_path,
-                        self.torhs_path,
                         self.log_path,
                         self.ramdisk_path,
                         self.static_path]:
@@ -480,10 +452,6 @@ class GLSettingsClass(object):
         """
         if not path:
             path = self.working_path
-
-        # we need to avoid changing permissions to torhs directory and its files
-        if path == os.path.join(self.working_path, 'torhs'):
-            return
 
         try:
             if path != self.working_path:

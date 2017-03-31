@@ -42,6 +42,7 @@ GLConfig = {
         'version_db': Int(default=DATABASE_VERSION),
 
         'tor_onion_priv_key': Unicode(validators=range_v(820, 825)), # Limits from txtorcon
+        'tor_onion_hostname': Unicode(validators=range_v(22, 22)),
 
         'https_priv_key': Unicode(),
         'https_priv_gen': Bool(default=False),
