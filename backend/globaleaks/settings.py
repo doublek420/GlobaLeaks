@@ -511,8 +511,8 @@ class GLSettingsClass(object):
     def drop_privileges(self):
         if os.getgid() != self.gid:
             try:
-                self.print_msg("switching group privileges since %d to %d" % (os.getgid(), self.gid))
-                os.setgid(self.gid)
+                self.print_msg("configuring group privileges for %s to %d" % (self.user, self.gid))
+                os.initgroups(self.user, self.gid)
             except OSError as droperr:
                 self.print_msg("unable to drop group privileges: %s" % droperr.strerror)
                 sys.exit(1)
